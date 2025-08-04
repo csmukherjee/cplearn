@@ -4,11 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="weighted ranking" />
+    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="First upload">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/cluster_core.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/cluster_core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/clustering_algo.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/clustering_algo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/corespace_execute.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/corespace_execute.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/corespect.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/corespect.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/densify.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/densify.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/embed.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/embed.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/louvain_setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/louvain_setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/propagate.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/propagate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/ranking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreSPECT/test_star.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/test_star.ipynb" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" show_ignored="true" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -86,7 +107,7 @@
       <workItem from="1750356233655" duration="20110000" />
       <workItem from="1751349923478" duration="599000" />
       <workItem from="1751551669795" duration="20000" />
-      <workItem from="1754169303534" duration="1477000" />
+      <workItem from="1754169303534" duration="2215000" />
     </task>
     <task id="LOCAL-00001" summary="revamp">
       <option name="closed" value="true" />
@@ -120,7 +141,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743569199473</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="First upload">
+      <option name="closed" value="true" />
+      <created>1754267330884</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1754267330884</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -130,6 +159,7 @@
     <MESSAGE value="revamp" />
     <MESSAGE value="some more clustering" />
     <MESSAGE value="weighted ranking" />
-    <option name="LAST_COMMIT_MESSAGE" value="weighted ranking" />
+    <MESSAGE value="First upload" />
+    <option name="LAST_COMMIT_MESSAGE" value="First upload" />
   </component>
 </project>
