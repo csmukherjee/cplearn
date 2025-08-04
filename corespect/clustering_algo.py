@@ -44,7 +44,7 @@ def spectral_clustering(X,true_k,choose_min_obj=True):
     return k_means(X_SE, true_k, choose_min_obj=choose_min_obj)
 
 
-import louvain_setup
+from corespect.clustering import louvain_setup
 from collections import deque
 
 import networkx as nx
@@ -71,8 +71,6 @@ def get_kNN(X, q=15):
     return knn_list, knn_dists
 
 
-import densify
-
 def louvain(X,ng_num=15,resolution=1.0):
 
 
@@ -89,9 +87,9 @@ def louvain(X,ng_num=15,resolution=1.0):
 #    Gp=densify.Densify_v0(G, Gp, core_nodes, ng_num)
 
 
-    total_partition=louvain_setup.louvain_partitions(G, weight="weight", resolution=resolution)
+    total_partition= louvain_setup.louvain_partitions(G, weight="weight", resolution=resolution)
     partition_ = deque(total_partition, maxlen=1).pop()
-    label_map=louvain_setup.partition_to_label(partition_)
+    label_map= louvain_setup.partition_to_label(partition_)
 
     louvain_labels=[]
     for ell in  range(n):

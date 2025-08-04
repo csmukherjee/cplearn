@@ -5,7 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="First upload">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/corespect/clustering/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/cluster_core.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/clustering/cluster_core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/clustering_algo.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/clustering_algo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/corespace_execute.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/corespace_execute.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/corespect.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/corespect.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/densify.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/densify.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/louvain_setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/corespect/clustering/louvain_setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/propagate.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/propagate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/corespect/ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/ranking.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,6 +69,11 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/coremap" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/corespect/clustering" />
+      <recent name="$PROJECT_DIR$/utils" />
+    </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -101,7 +114,7 @@
       <workItem from="1750356233655" duration="20110000" />
       <workItem from="1751349923478" duration="599000" />
       <workItem from="1751551669795" duration="20000" />
-      <workItem from="1754169303534" duration="3332000" />
+      <workItem from="1754169303534" duration="3717000" />
     </task>
     <task id="LOCAL-00001" summary="revamp">
       <option name="closed" value="true" />
@@ -159,7 +172,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754267968936</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="First upload">
+      <option name="closed" value="true" />
+      <created>1754271482411</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1754271482411</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

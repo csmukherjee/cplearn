@@ -153,8 +153,6 @@ def get_kNN(X, q=15):
     return knn_list, knn_dists
 
 
-import densify
-
 def louvain(X,core_nodes,true_k,choose_min_obj=True,cav='ind',ng_num=15,resolution=1.0):
 
 

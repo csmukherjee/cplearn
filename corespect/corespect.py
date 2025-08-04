@@ -1,6 +1,5 @@
-import ranking
-import cluster_core
-import propagate
+from utils import ranking, propagate
+from corespect.clustering import cluster_core
 import numpy as np
 
 
