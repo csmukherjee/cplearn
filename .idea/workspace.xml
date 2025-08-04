@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="weighted ranking" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;csmukherjee&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/csmukherjee/cplearn&quot;,
+    &quot;accountId&quot;: &quot;7afa6971-1957-4864-b53f-704b248c1586&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2tHnRBbThAzHXzYMdRRPBbDlxTN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/chandrasekharmukherjee/PycharmProjects/cplearn&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-PY-243.24978.54" />
+        <option value="bundled-python-sdk-91e3b7efe1d4-466328ff949b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.24978.54" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="" />
+      <created>1740017856660</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1740017856660</updated>
+      <workItem from="1740017857710" duration="277000" />
+      <workItem from="1740020714748" duration="4536000" />
+      <workItem from="1740368289266" duration="18000" />
+      <workItem from="1740535848195" duration="1478000" />
+      <workItem from="1740638835040" duration="31000" />
+      <workItem from="1740690507739" duration="2803000" />
+      <workItem from="1741482000048" duration="5169000" />
+      <workItem from="1741549655061" duration="3673000" />
+      <workItem from="1743555349462" duration="22339000" />
+      <workItem from="1745216296890" duration="2068000" />
+      <workItem from="1745344555274" duration="608000" />
+      <workItem from="1745436432220" duration="3156000" />
+      <workItem from="1745797854706" duration="2613000" />
+      <workItem from="1746138430114" duration="184000" />
+      <workItem from="1746508581995" duration="9722000" />
+      <workItem from="1747530345465" duration="48000" />
+      <workItem from="1747530401050" duration="599000" />
+      <workItem from="1747558775439" duration="15000" />
+      <workItem from="1747635519917" duration="3062000" />
+      <workItem from="1748310911979" duration="12818000" />
+      <workItem from="1750356233655" duration="20110000" />
+      <workItem from="1751349923478" duration="599000" />
+      <workItem from="1751551669795" duration="20000" />
+      <workItem from="1754169303534" duration="1477000" />
+    </task>
+    <task id="LOCAL-00001" summary="revamp">
+      <option name="closed" value="true" />
+      <created>1740017972518</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1740017972518</updated>
+    </task>
+    <task id="LOCAL-00002" summary="revamp">
+      <option name="closed" value="true" />
+      <created>1740017995598</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1740017995598</updated>
+    </task>
+    <task id="LOCAL-00003" summary="some more clustering">
+      <option name="closed" value="true" />
+      <created>1741501052911</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1741501052911</updated>
+    </task>
+    <task id="LOCAL-00004" summary="weighted ranking">
+      <option name="closed" value="true" />
+      <created>1743569199473</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1743569199473</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="revamp" />
+    <MESSAGE value="some more clustering" />
+    <MESSAGE value="weighted ranking" />
+    <option name="LAST_COMMIT_MESSAGE" value="weighted ranking" />
+  </component>
+</project>
