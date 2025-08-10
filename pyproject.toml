@@ -1,0 +1,27 @@
+[project]
+name = "cplearn"
+version = "1.0.0"
+description = "Enhancing unsupervised learning with geometry-density interactions via core space"
+authors = [
+  { name = "Chandra Sekhar Mukherjee", email = "chandrasekhar.mukherjee07@gmail.com" },
+  { name = "Joonyoung (Aaron) Bae",       email = "joonyoungbae.aaron@gmail.com" }
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.0,<=3.12.10"
+dependencies = [
+  "hdbscan>=0.8.40",
+  "hnswlib>=0.8.0",
+  "networkx>=3.1",
+  "numba>=0.57.1",
+  "numpy>=1.24.3",
+  "pandas>=2.0.3",
+  "scikit-learn>=1.4.2"
+]
+
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
