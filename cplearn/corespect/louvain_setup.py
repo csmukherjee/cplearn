@@ -1,4 +1,3 @@
-import itertools
 from collections import defaultdict, deque
 
 import networkx as nx
@@ -19,6 +18,25 @@ def partition_to_label(partition_):
 
     return label_map
 
+def part_to_full_label(partition, original_n, mapping=None):  # partition to labels (Returns full labels)
+    label_full = [-1] * (original_n)
+    '''
+    iGraph has different node numbering than networkx (With mapping)
+    '''
+    if mapping is not None:
+        for i, community in enumerate(partition):
+            for node in community:
+                label_full[mapping[node]] = i
+    else:
+        c = 0
+        for sets in partition:
+            for ell in sets:
+                label_full[ell] = c
+
+            c = c + 1
+    
+
+    return label_full
 
 def _gen_graph(G, partition):
     """Generate a new graph based on the partitions of a given graph"""
@@ -119,14 +137,13 @@ def _one_level(G, m, partition, resolution=1, is_directed=False, seed=None):
             for n, _, wt in G.in_edges(u, data="weight"):
                 if u != n:
                     nbrs[u][n] += wt
-        # log("nbrs: "+ str(nbrs))
+        
     else:
         degrees = dict(G.degree(weight="weight"))
         Stot = list(degrees.values())
         nbrs = {u: {v: data["weight"] for v, data in G[u].items() if v != u} for u in G}
     rand_nodes = list(G.nodes)
     seed.shuffle(rand_nodes)
-    # log("rand_nodes: "+ str(rand_nodes))
     nb_moves = 1
     improvement = False
     while nb_moves > 0:
@@ -135,11 +152,9 @@ def _one_level(G, m, partition, resolution=1, is_directed=False, seed=None):
             ''' 
             setting initial best_mod to 0 causes floating point error
             '''
-            # best_mod = 0
             best_mod = 1e-7
             best_com = node2com[u]
             weights2com = _neighbor_weights(nbrs[u], node2com)
-            # log('weights2com: '+str(weights2com))
             if is_directed:
                 in_degree = in_degrees[u]
                 out_degree = out_degrees[u]
@@ -170,12 +185,7 @@ def _one_level(G, m, partition, resolution=1, is_directed=False, seed=None):
                             )
                             / m ** 2
                     )
-                    # # log('node2com: '+str(node2com))
-                    # log('u: '+str(u))
-                    # log('nbr_com: '+str(nbr_com))
-                    # log('inner_partition: '+str(inner_partition))
-                    # # log('m: '+str(m))
-                    # log('u:'+str(u)+' nbr_com: '+str(inner_partition[nbr_com])+ ' gain: '+str(gain))
+                
 
                 else:
                     gain = (
@@ -187,7 +197,7 @@ def _one_level(G, m, partition, resolution=1, is_directed=False, seed=None):
                 if gain > best_mod:
                     best_mod = gain
                     best_com = nbr_com
-                    # log("original gain:"+ str(best_mod))
+                    
             if is_directed:
                 Stot_in[best_com] += in_degree
                 Stot_out[best_com] += out_degree
@@ -202,8 +212,7 @@ def _one_level(G, m, partition, resolution=1, is_directed=False, seed=None):
                 improvement = True
                 nb_moves += 1
                 node2com[u] = best_com
-                #log("node moved:" + (str(u)) + " to " + str(best_com))
-                #log("mod improved:" + str(best_mod))
+                
 
     partition = list(filter(len, partition))
     inner_partition = list(filter(len, inner_partition))
@@ -304,24 +313,6 @@ def louvain_partitions(
         )
 
 
-def part_to_full_label(partition, original_n, mapping=None):  # partition to labels (Returns full labels)
-    label_1 = [-1] * (original_n)
-    '''
-    iGraph has different node numbering than networkx (With mapping)
-    '''
-    if mapping is not None:
-        for i, community in enumerate(partition):
-            for node in community:
-                label_1[mapping[node]] = i
-    else:
-        c = 0
-        for sets in partition:
-            for ell in sets:
-                label_1[ell] = c
 
-            c = c + 1
-    # print(label_compressed)
-
-    return label_1
 
 

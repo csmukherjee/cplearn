@@ -1,6 +1,30 @@
 
 from sklearn.cluster import KMeans
 import numpy as np
+from . import densify, louvain_setup
+from collections import deque
+
+import networkx as nx
+
+import hnswlib
+
+from hdbscan import HDBSCAN, all_points_membership_vectors
+
+
+def get_kNN(X, q=15):
+    n = X.shape[0]
+    dim = X.shape[1]
+    p = hnswlib.Index(space='l2', dim=dim)
+    p.init_index(max_elements=n, ef_construction=200, M=64)
+    p.add_items(X)
+    p.set_ef(2*q)
+
+    labels, dists = p.knn_query(X, k=q+1)
+    knn_list = labels[:, 1:]
+    knn_dists = dists[:, 1:]
+
+    return knn_list, knn_dists
+
 
 def k_means(X,true_k,choose_min_obj=True):
 
@@ -44,7 +68,7 @@ def spectral_clustering(X,true_k,choose_min_obj=True):
     return k_means(X_SE, true_k, choose_min_obj=choose_min_obj)
 
 
-from corespect.clustering import louvain_setup
+from . import louvain_setup
 from collections import deque
 
 import networkx as nx
@@ -100,10 +124,8 @@ def louvain(X,ng_num=15,resolution=1.0):
 
 
 def hdbscan(X,min_sample=10,min_cluster_size=10):
-
-    import hdbscan
-
-    clusterer = hdbscan.HDBSCAN(
+    
+    clusterer = HDBSCAN(
         min_cluster_size=min_cluster_size,
         min_samples=min_sample,
         metric='l2',
@@ -111,9 +133,6 @@ def hdbscan(X,min_sample=10,min_cluster_size=10):
         prediction_data = True
     ).fit(X)
 
-
-
-    from hdbscan import all_points_membership_vectors
 
     soft_probs = all_points_membership_vectors(clusterer)
     soft_labels = np.argmax(soft_probs, axis=1)
