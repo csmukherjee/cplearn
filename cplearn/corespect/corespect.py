@@ -9,7 +9,7 @@ class Corespect():
     def __init__(
         self, 
         q=40, 
-        r=20, 
+        r=40,
         ng_num=20, 
         ranking_algo='FlowRank', 
         layer_ratio=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], 
