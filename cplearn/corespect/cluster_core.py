@@ -1,19 +1,8 @@
+from ..utils import louvain_setup
 
-from sklearn.cluster import KMeans
 import numpy as np
-from . import louvain_setup, densify
-from .cav import calculate_cav
-from collections import deque
-
-import networkx as nx
 
 import hnswlib
-
-from sklearn.manifold import SpectralEmbedding
-
-# import hdbscan 
-from hdbscan import all_points_membership_vectors, HDBSCAN
-
 def get_kNN(X, q=15):
     """
     Generate a k-nearest neighbors graph from the input data.
@@ -35,155 +24,75 @@ def get_kNN(X, q=15):
     return knn_list, knn_dists
 
 
-def k_means(X,core_nodes,cav, cluster_algo_params):
-    # Check if required parameters are provided
-    allowed_params = ['k', 'choose_min_obj']
-    for key in cluster_algo_params.keys():
-        if key not in allowed_params:
-            raise ValueError(f"Unwanted parameter found: {key}")
-    
-    if 'k' not in cluster_algo_params:
-        raise ValueError("Parameter 'k' is required for k-means clustering")
-    k = cluster_algo_params['k']
-    choose_min_obj = cluster_algo_params.get('choose_min_obj', True)
-    
-    # Perform k-means clustering
-    X_core = X[core_nodes]
+from ..utils import densify
+import networkx as nx
+from collections import deque
 
-    if choose_min_obj:
-        min_obj_val = float('inf')
-
-        for rounds in range(20):
-
-            kmeans = KMeans(n_clusters=k, n_init=1, max_iter=1000)
-            kmeans.fit(X_core)
-
-            centroids = kmeans.cluster_centers_
-            obj_val = kmeans.inertia_
-            labels_km = kmeans.labels_
-
-            if rounds == 0 or obj_val < min_obj_val:
-                min_obj_val = obj_val
-                best_centroids = centroids
-                best_labels_km = labels_km
-
-        centroids = best_centroids
-        core_labels = best_labels_km
-
-    else:
-        kmeans = KMeans(n_clusters=k)
-        kmeans.fit(X_core)
-        centroids = kmeans.cluster_centers_
-        core_labels = kmeans.labels_
-
-    cluster_assignment_vectors = calculate_cav(X_core, core_labels, cav=cav)
-
-    print("Clustered core using k-means with cav:", cav)
-
-    return core_labels, cluster_assignment_vectors
+def louvain(X,core_nodes,cluster_algo_params):
 
 
-def spectral_clustering(X, core_nodes, cav, cluster_algo_params):
-    # Check if required parameters are provided
-    allowed_params = ['k', 'choose_min_obj']
-    for key in cluster_algo_params.keys():
-        if key not in allowed_params:
-            raise ValueError(f"Unwanted parameter found: {key}")
-    
-    if 'k' not in cluster_algo_params:
-        raise ValueError("Parameter 'k' is required for Spectral Clustering")
-    k = cluster_algo_params['k']
-    choose_min_obj = cluster_algo_params.get('choose_min_obj', True)
-    
-    # Perform spectral embedding
-    X_core = X[core_nodes]
 
-    SE = SpectralEmbedding(n_components=k, affinity='nearest_neighbors', n_neighbors=15)
-    X_core = SE.fit_transform(X_core)
-
-    if choose_min_obj:
-        min_obj_val = float('inf')
-
-        for rounds in range(20):
-
-            kmeans = KMeans(n_clusters=k, n_init=1, max_iter=1000)
-            kmeans.fit(X_core)
-
-            centroids = kmeans.cluster_centers_
-            obj_val = kmeans.inertia_
-            labels_km = kmeans.labels_
-
-            if rounds == 0 or obj_val < min_obj_val:
-                min_obj_val = obj_val
-                best_centroids = centroids
-                best_labels_km = labels_km
-
-        centroids = best_centroids
-        core_labels = best_labels_km
-
-    else:
-        kmeans = KMeans(n_clusters=k)
-        kmeans.fit(X_core)
-        centroids = kmeans.cluster_centers_
-        core_labels = kmeans.labels_
-
-    cluster_assignment_vectors = calculate_cav(X_core, core_labels, cav=cav)
-
-    print("Clustered core using spectral-clustering with cav:", cav)
-
-    return core_labels, cluster_assignment_vectors
-
-def hdbscan(X,core_nodes,cav,cluster_algo_params):
-    # Check if required parameters are provided
-    allowed_params = ['metric', 'min_cluster_size', 'min_samples', 'alpha']
+    allowed_params = ['ng_num', 'resolution']
     for key in cluster_algo_params.keys():
         if key not in allowed_params:
             raise ValueError(f"Unwanted parameter found: {key}")
 
-    min_cluster_size = cluster_algo_params.get('min_cluster_size', 10)
-    min_samples = cluster_algo_params.get('min_samples', min_cluster_size)
-    metric = cluster_algo_params.get('metric', 'l2')
-    alpha = cluster_algo_params.get('alpha', 1.1)
-    
-    # Perform HDBSCAN clustering
-    X_core = X[core_nodes]
+    ng_num = cluster_algo_params.get('ng_num', 15)
+    resolution = cluster_algo_params.get('resolution', 1.0)
 
-    clusterer = HDBSCAN(
-        min_cluster_size=min_cluster_size,
-        min_samples=min_samples,
-        metric=metric,
-        alpha=alpha,
-        prediction_data=True
-    ).fit(X_core)
+    n=X.shape[0]
+
+    print("Clustering core with louvain, ng_num=",ng_num," resolution=",resolution)
+
+    #densify
+
+    G= nx.DiGraph()
+    knn_list, _ = get_kNN(X, q=ng_num)
+    for i in range(n):
+        for j in knn_list[i, :]:
+            if i != j:
+                G.add_edge(i, j, weight=1)
+
+    hmap=np.zeros(n)
+    for ell in core_nodes:
+        hmap[ell] = 1
+
+    Gp= nx.DiGraph()
+    for ell in core_nodes:
+        Gp.add_node(ell)
+
+    for u,v in G.edges():
+        if hmap[u] == 1 and hmap[v] == 1:
+            Gp.add_edge(u, v, weight=G.edges[u, v]['weight'])
+
+#    Gp=densify.Densify_v0(G, Gp, core_nodes, ng_num)
+#    print(len(core_nodes),Gp.number_of_nodes())
 
 
-    soft_probs = all_points_membership_vectors(clusterer)
-    core_labels = np.argmax(soft_probs, axis=1)
+    total_partition=louvain_setup.louvain_partitions(Gp, weight="weight", resolution=resolution)
+    partition_ = deque(total_partition, maxlen=1).pop()
+    label_map=louvain_setup.partition_to_label(partition_)
+
+    core_labels=[]
+    for ell in  core_nodes:
+        core_labels.append(label_map[ell])
 
 
-    our_k= len(set(core_labels)) - (1 if -1 in core_labels else 0)
 
-    cluster_assignment_vectors=[]
-    
-    for i in range(len(core_nodes)):
-        vec = []
-        for j in range(our_k):
-            if core_labels[i] == j:
-                vec.append(-1)
-            else:
-                vec.append(0)
-        cluster_assignment_vectors.append(np.array(vec).astype('float64'))
+    #Reorder labels
+    hmap={}
+    t=0
+    for ell in set(core_labels):
+        hmap[ell]=t
+        t+=1
 
-    core_labels_final=np.ones(len(core_nodes)) * -1
+    new_core_labels=[]
+    for ell in range(len(core_labels)):
+        new_core_labels.append(hmap[core_labels[ell]])
 
-    label_map = {lbl: i for i, lbl in enumerate(set(core_labels))}
+    core_labels=new_core_labels.copy()
 
-    for i in range(len(core_nodes)):
-        core_labels_final[i] = label_map[core_labels[i]]
+    print("Clustered core using louvain")
 
-    cluster_assignment_vectors = calculate_cav(X_core, core_labels_final, cav=cav)
 
-    print("Clustered core using HDBSCAN with cav:", cav)
-
-    return core_labels_final,cluster_assignment_vectors
-
+    return core_labels

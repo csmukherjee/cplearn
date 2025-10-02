@@ -13,4 +13,4 @@ warnings.filterwarnings(
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=NumbaPendingDeprecationWarning)
 
-__all__ = ["corespect", "coremap", "utils"]
+__all__ = ["corespect"]

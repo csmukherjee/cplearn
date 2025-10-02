@@ -1,12 +1,6 @@
 
 from sklearn.cluster import KMeans
 import numpy as np
-from . import densify, louvain_setup
-from collections import deque
-
-import networkx as nx
-
-import hnswlib
 
 from hdbscan import HDBSCAN, all_points_membership_vectors
 
@@ -109,7 +103,6 @@ def louvain(X,ng_num=15,resolution=1.0):
 
 
 #    Gp=densify.Densify_v0(G, Gp, core_nodes, ng_num)
-
 
     total_partition= louvain_setup.louvain_partitions(G, weight="weight", resolution=resolution)
     partition_ = deque(total_partition, maxlen=1).pop()

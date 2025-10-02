@@ -160,8 +160,14 @@ def FLOW_rank_optimized(X,init_score,r):
     return final_score
 
 
-def FlowRank(X,q=20,r=20):
+def FlowRank(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     #Get initial density estimation.
 
@@ -269,8 +275,14 @@ def FLOW_rank_optimized_hops(X,init_score,r):
 
 
 
-def FlowRank_count_hops(X,q=20,r=20):
+def FlowRank_count_hops(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     #Get initial density estimation.
 
@@ -329,8 +341,14 @@ def assign_score_bins_per_cluster(cluster_labels: np.ndarray, score_dict: dict) 
 
 
 # import clustering_algo as cs_algo
-def Filtered_FlowRank(X,q=20,r=20):
+def Filtered_FlowRank(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     first_labels=cs_algo.louvain(X,ng_num=15,resolution=0.3)
     first_score=FlowRank(X,q,r)
@@ -343,7 +361,14 @@ def Filtered_FlowRank(X,q=20,r=20):
 
 
 #Standard rankings: Degree and PageRank
-def PageRank(X,q=20,r=20):
+def PageRank(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
+
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     alpha=0.85
 

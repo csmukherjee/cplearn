@@ -221,10 +221,29 @@ def pseudo_centroid_distances(labels, nodes_this_round, P_vec, ng_list, dist_to_
 
 
 
-def CDNN(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_vectors,ng_num):
+def CDNN(X,sorted_points,core_nodes,final_labels,cluster_assignment_vectors,propagate_algo_params):
+    allowed_params = ['num_step', 'ng_num']
+    for key in propagate_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
-    num_step= len(layer_ratio) - 1
+    num_step = propagate_algo_params.get('num_step', 10)
+    ng_num = propagate_algo_params.get('ng_num', 15)
+
+    #Calculate layer ratio
+    layer_ratio=[]
+    layer_ratio.append(len(core_nodes)/len(sorted_points))
+    # the rest is divided into equal parts
+    for i in range(1, num_step + 1):
+        layer_ratio.append(len(core_nodes)/len(sorted_points) + i * (1 - len(core_nodes)/len(sorted_points)) / num_step)
+    print("layer_ratio = ", layer_ratio)
+
     n=X.shape[0]
+
+    round_num=0
+    round_info=-1*np.ones(n).astype(int)
+    round_info[core_nodes]=round_num
+
 
     node_to_rank = -1 * np.zeros(n).astype(int)
     rank_counter = 0
@@ -238,6 +257,9 @@ def CDNN(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_
     for rnd in range(num_step):
 
         nodes_this_round = sorted_points[int(layer_ratio[rnd] * n):int(layer_ratio[rnd + 1] * n)].astype(int)
+
+        round_num += 1
+        round_info[nodes_this_round]=round_num
 
         # We create the CDNN graph layer-by-layer
         ng_list, distances = CDNN_layer(X, nodes_this_round, final_labels, ng_num)
@@ -256,27 +278,15 @@ def CDNN(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_
 
     print("Finished propagation with CDNN")
 
-    return final_labels
-
-
-
-def label_prop(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_vectors,ng_num):
-
-    from  sklearn.semi_supervised import LabelPropagation as LP
-
-    lp_model=LP(kernel='knn', n_neighbors=ng_num, max_iter=1000, tol=1e-3)
-    lp_model.fit(X,final_labels)
-    final_labels= lp_model.transduction_
-
-    print("Finished propagation with scikit-lean label propagation")
-
-    return final_labels
+    return final_labels,round_info
 
 
 #----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 #Recursive majority addition
 
 def majority_addition(G,cnum,final_labels,remaining_nodes,eps=0):
+
+    print("Remaining nodes in this round",len(remaining_nodes))
 
     added_nodes=set()
     for ell in remaining_nodes:
@@ -289,14 +299,17 @@ def majority_addition(G,cnum,final_labels,remaining_nodes,eps=0):
             final_labels[ell]=np.argmax(votes)
             added_nodes.add(ell)
 
+    print("check here",len(added_nodes))
     remaining_nodes=remaining_nodes-added_nodes
 
-    return final_labels,remaining_nodes
+    return final_labels,remaining_nodes,added_nodes
 
 
 def max_addition(G,cnum,final_labels,remaining_nodes,eps=0):
 
     added_nodes=set()
+
+
 
     #Calculate max.
     max_list=[]
@@ -325,17 +338,29 @@ def max_addition(G,cnum,final_labels,remaining_nodes,eps=0):
             added_nodes.add(ell)
 
 
+
+
     remaining_nodes=remaining_nodes-added_nodes
 
-    return final_labels,remaining_nodes
+    return final_labels,remaining_nodes,added_nodes
 
 
 
 
-def recursive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_vectors,ng_num):
+def recursive_majority(X,core_nodes,final_labels,propagate_algo_params):
 
+    allowed_params = ['ng_num']
+    for key in propagate_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
+
+    ng_num = propagate_algo_params.get('ng_num', 15)
 
     n=X.shape[0]
+
+    round_info=-1*np.ones(n).astype(int)
+    round_num=0
+    round_info[core_nodes]=round_num
 
 
     G= nx.DiGraph()
@@ -354,12 +379,20 @@ def recursive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,clust
 
     cnum=len(set(final_labels))-1
     eps=0
-    stage=0 #Set stage=1 to go back to normal recursive majority
+
 
     while True:
+        round_num+=1
         n0 = np.sum(final_labels != -1)
 
-        final_labels,remaining_nodes=majority_addition(G,cnum,final_labels,remaining_nodes,eps)
+        remaining_nodes_before=set(remaining_nodes)
+
+        final_labels,remaining_nodes,added_nodes=majority_addition(G,cnum,final_labels,remaining_nodes,eps)
+
+        print("test now",len(added_nodes),round_num,len(remaining_nodes))
+        for ell in added_nodes:
+            round_info[ell]=round_num
+
 
         rounds+= 1
         n1=np.sum(final_labels != -1)
@@ -370,13 +403,23 @@ def recursive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,clust
 
 
     print(f"Finished propagation with recursive majority addition in {rounds} rounds and {len(remaining_nodes)} remaining nodes.")
-    return final_labels
+    return final_labels,round_info
 
 
-def adaptive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,cluster_assignment_vectors,ng_num):
+def adaptive_majority(X,core_nodes,final_labels,propagate_algo_params):
 
+    allowed_params = ['ng_num']
+    for key in propagate_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    ng_num = propagate_algo_params.get('ng_num', 15)
     n=X.shape[0]
+
+    round_info=-1*np.ones(n).astype(int)
+    round_num=0
+    round_info[core_nodes]=round_num
+
 
 
     G= nx.DiGraph()
@@ -397,15 +440,43 @@ def adaptive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,cluste
     eps=0
     stage=0 #Set stage=1 to go back to normal recursive majority
 
+    ch=0
+
     while True and stage<2:
 
         n0 = np.sum(final_labels != -1)
         if stage==0:
-            final_labels,remaining_nodes=majority_addition(G,cnum,final_labels,remaining_nodes,eps)
+            round_num+=1
+            remaining_nodes_before = remaining_nodes.copy()
+
+            final_labels,remaining_nodes,added_nodes=majority_addition(G,cnum,final_labels,remaining_nodes,eps)
+
+            for ell in added_nodes:
+                round_info[ell]=round_num
+
+
+
 
         elif stage==1:
-            final_labels, remaining_nodes = max_addition(G, cnum, final_labels, remaining_nodes, eps)
+
+            ch+=1
+
+            if ch==1:
+
+                round_num+=1 #The skip denotes shift from recursive to adaptive.
+
+                print("Recursive majority stopped at round number=",round_num)
+
+
+            round_num+=1
+
+            final_labels, remaining_nodes,added_nodes = max_addition(G, cnum, final_labels, remaining_nodes, eps)
             stage+=1
+
+            for ell in added_nodes:
+                round_info[ell]=round_num
+
+
 
         rounds+= 1
         n1=np.sum(final_labels != -1)
@@ -427,7 +498,9 @@ def adaptive_majority(X,sorted_points,core_nodes,final_labels,layer_ratio,cluste
 
 
     print(f"Finished propagation with recursive majority addition in {rounds} rounds and {len(remaining_nodes)} remaining nodes.")
-    return final_labels
+    return final_labels, round_info
+
+
 
 def majority_addition_adaptive(G,cnum,final_labels,remaining_nodes):
 

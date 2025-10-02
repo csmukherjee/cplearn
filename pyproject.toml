@@ -1,12 +1,19 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+
+
 [project]
 name = "cplearn"
-version = "1.0.0"
-description = "Enhancing unsupervised learning with geometry-density interactions via core space"
+version = "0.1.1"
+description = "Enhancing unsupervised learning with geometry-density interactions via decomposition of data into geometric core-periphery layers and subsequent clustering"
 authors = [
   { name = "Chandra Sekhar Mukherjee", email = "chandrasekhar.mukherjee07@gmail.com" },
   { name = "Joonyoung (Aaron) Bae",       email = "joonyoungbae.aaron@gmail.com" }
 ]
-license = {text = "MIT"}
+license = "GPL-3.0-or-later"
 readme = "README.md"
 requires-python = ">=3.0,<=3.12.10"
 dependencies = [
@@ -16,12 +23,10 @@ dependencies = [
   "numba>=0.57.1",
   "numpy>=1.24.3",
   "pandas>=2.0.3",
-  "scikit-learn>=1.4.2"
+  "scikit-learn>=1.6.1",
+  "plotly>=6.0,<7.0",
+  "flatbuffers>=24.0,<25.0",
+  "umap-learn>=0.5.9.post2,<1.0.0"
 ]
 
-
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 

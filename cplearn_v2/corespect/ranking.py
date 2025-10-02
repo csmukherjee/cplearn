@@ -1,37 +1,9 @@
-
-
-
-#Genreate K-NN and basic FlowRank
 import numpy as np
-import hnswlib
 import networkx as nx
 from numba import njit
 from numba.typed import List
 
-M=200
-ef_construction=200
-ef=200
-
-def get_kNN(X, q=15):
-    """
-    Generate a k-nearest neighbors graph from the input data.
-    :param X: Input data (numpy array).
-    :param q: Number of nearest neighbors.
-    :return: k-nearest neighbors list and distances.
-    """
-    n = X.shape[0]
-    dim = X.shape[1]
-    p = hnswlib.Index(space='l2', dim=dim)
-    p.init_index(max_elements=n, ef_construction=200, M=64)
-    p.add_items(X)
-    p.set_ef(2*q)
-
-    labels, dists = p.knn_query(X, k=q+1)
-    knn_list = labels[:, 1:]
-    knn_dists = dists[:, 1:]
-
-    return knn_list, knn_dists
-
+from ..utils.gen_utils import get_kNN
 
 def init_random_walk(G,init_walk_len=10):
     n = G.number_of_nodes()
@@ -166,8 +138,14 @@ def FLOW_rank_optimized(X,init_score,r):
     return final_score
 
 
-def FlowRank(X,q=20,r=20):
+def FlowRank(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     #Get initial density estimation.
 
@@ -275,8 +253,14 @@ def FLOW_rank_optimized_hops(X,init_score,r):
 
 
 
-def FlowRank_count_hops(X,q=20,r=20):
+def FlowRank_count_hops(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
 
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     #Get initial density estimation.
 
@@ -294,62 +278,18 @@ def FlowRank_count_hops(X,q=20,r=20):
 
     return final_score
 
-
-#Graph with varying search radius
-
-
-
-#Partition and then FlowRank
-
-
 import numpy as np
 from collections import defaultdict
 
-
-def assign_score_bins_per_cluster(cluster_labels: np.ndarray, score_dict: dict) -> dict:
-    n = len(cluster_labels)
-    assert n == len(score_dict), "Mismatch in number of points"
-
-    # Group points by cluster
-    clusters = defaultdict(list)
-    for idx, cluster in enumerate(cluster_labels):
-        clusters[cluster].append(idx)
-
-    score_bins = {}
-
-    for cluster_id, indices in clusters.items():
-        # Get scores for this cluster
-        scores = [(i, score_dict[i]) for i in indices]
-        scores.sort(key=lambda x: x[1], reverse=True)
-
-        k = len(scores)
-        num_bins = 30
-        bin_size = max(1, k // num_bins)
-
-        for rank, (i, _) in enumerate(scores):
-            bin_id = rank // bin_size
-            bin_id = min(bin_id, num_bins - 1)  # handle edge cases
-            score_bins[i] = 1.0 - (1/num_bins * bin_id)
-
-    return score_bins
-
-
-import clustering_algo as cs_algo
-def Filtered_FlowRank(X,q=20,r=20):
-
-
-    first_labels=cs_algo.louvain(X,ng_num=15,resolution=0.3)
-    first_score=FlowRank(X,q,r)
-
-    #Re-Rank based on first_labels and first_score
-    final_score=assign_score_bins_per_cluster(first_labels,first_score)
-
-    return final_score
-
-
-
 #Standard rankings: Degree and PageRank
-def PageRank(X,q=20,r=20):
+def PageRank(X,ranking_algo_params):
+    allowed_params = ['q', 'r']
+    for key in ranking_algo_params.keys():
+        if key not in allowed_params:
+            raise ValueError(f"Unwanted parameter found: {key}")
+
+    q = ranking_algo_params.get('q', 40)
+    r = ranking_algo_params.get('r', 20)
 
     alpha=0.85
 
@@ -362,10 +302,4 @@ def PageRank(X,q=20,r=20):
     pagerank_scores = nx.pagerank(G,alpha=alpha)
 
     return pagerank_scores
-
-#FlowRank based on closest neighbor that has higher score
-#Search radius is an important parameter
-
-
-#Any other ideas:
 
