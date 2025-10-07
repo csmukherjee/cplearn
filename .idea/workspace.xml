@@ -4,11 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="New version">
-      <change afterPath="$PROJECT_DIR$/aistats.ipynb" afterDir="false" />
+    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="New version-ranking finished for now.">
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/cmap_ref.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/coremap.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/coremap_graph_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/find_anchors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/coremap/viz_tools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cplearn_v3/utils/densify.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aistats.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/aistats.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/corespect.py" beforeDir="false" afterPath="$PROJECT_DIR$/cplearn_v3/corespect/corespect.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/layer_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/cplearn_v3/corespect/layer_extraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_call.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_call.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/cplearn_v3/corespect/ranking.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/gen_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/cplearn_v3/utils/gen_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test_v3.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/test_v3.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -58,7 +68,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "in-work",
-    "last_opened_file_path": "/Users/chandrasekharmukherjee/PycharmProjects/cplearn/cplearn_v3/corespect",
+    "last_opened_file_path": "/Users/chandrasekharmukherjee/PycharmProjects/cplearn/cplearn_v3/coremap",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -69,11 +79,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/cplearn_v3/coremap" />
+      <recent name="$PROJECT_DIR$/cplearn_v3/utils" />
       <recent name="$PROJECT_DIR$/cplearn_v3/corespect" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/cplearn_v2/utils" />
-      <recent name="$PROJECT_DIR$/cplearn" />
-      <recent name="$PROJECT_DIR$/coremap" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/utils" />
@@ -126,7 +136,8 @@
       <workItem from="1757727737291" duration="27319000" />
       <workItem from="1758991349034" duration="1226000" />
       <workItem from="1759018961424" duration="10515000" />
-      <workItem from="1759094466479" duration="127502000" />
+      <workItem from="1759094466479" duration="129644000" />
+      <workItem from="1759611788261" duration="74318000" />
     </task>
     <task id="LOCAL-00001" summary="revamp">
       <option name="closed" value="true" />
@@ -216,7 +227,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759437563284</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="New version-ranking finished for now.">
+      <option name="closed" value="true" />
+      <created>1759564365309</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1759564365309</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -229,6 +248,7 @@
     <MESSAGE value="First upload" />
     <MESSAGE value="updated default values" />
     <MESSAGE value="New version" />
-    <option name="LAST_COMMIT_MESSAGE" value="New version" />
+    <MESSAGE value="New version-ranking finished for now." />
+    <option name="LAST_COMMIT_MESSAGE" value="New version-ranking finished for now." />
   </component>
 </project>

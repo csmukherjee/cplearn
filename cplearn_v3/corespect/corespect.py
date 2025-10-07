@@ -30,6 +30,7 @@ def _extract_layers(self, method='quantile', layer_extraction_params=None):
 
 
     self.knn_list=knn_list
+    self.knn_dists=knn_dist
     self.G=G
 
 
@@ -77,6 +78,7 @@ class Corespect:
         self.n = X.shape[0]
 
         self.knn_list = None
+        self.knn_dists = None
         self.G = None
         self.FlowRank_score=None
 

@@ -10,6 +10,7 @@ from ..utils.gen_utils import get_edge_list
 import igraph as ig
 
 
+
 @njit
 def init_random_walk(adj_list, init_walk_len=10):
     n = len(adj_list)
@@ -215,7 +216,6 @@ def PageRank(X,ranking_algo_params):
             raise ValueError(f"Unwanted parameter found: {key}")
 
     q = ranking_algo_params.get('q', 40)
-    r = ranking_algo_params.get('r', 20)
 
     alpha=0.85
 

@@ -1,24 +1,23 @@
-
-#Need graph building
-#Need to call clustering on the core for partitioned majority
-
 from joblib import Parallel, delayed
 from numba import njit
+
 
 import numpy as np
 import leidenalg
 
-import networkx as nx
-
-from ..utils.gen_utils import get_kNN
-from ..utils.clustering_algo import louvain
+from ..utils.densify import densify_v0
 
 
-def cluster_subset(G,core_nodes,res):
+def cluster_subset(G,core_nodes,res,densify=False,adj_list=None):
 
     n=G.vcount()
 
     G_core = G.induced_subgraph(core_nodes)
+
+    if densify:
+        print("densifying...")
+        G_core=densify_v0(adj_list,G,G_core,core_nodes)
+
 
     partition = leidenalg.find_partition(
         G_core,
@@ -181,10 +180,10 @@ def partitioned_majority_stage2(G, cnum, proxy_labels, remaining_nodes):
 
 #from collections import Counter
 
-def find_one_layer_intersection(G,core_nodes,rem_nodes,eps,res):
+def find_one_layer_intersection(G,core_nodes,rem_nodes,eps,res,densify,adj_list):
 
 
-    labels_init= cluster_subset(G, core_nodes,res=res)
+    labels_init= cluster_subset(G, core_nodes,res=res,densify=densify,adj_list=adj_list)
 
     #print(Counter(labels_init),flush=True)
 
@@ -201,9 +200,9 @@ def find_one_layer_intersection(G,core_nodes,rem_nodes,eps,res):
 
     return layer
 
-def find_two_layers_intersection(G,core_nodes,rem_nodes,eps,res):
+def find_two_layers_intersection(G,core_nodes,rem_nodes,eps,res,densify,adj_list):
 
-    labels_init= cluster_subset(G, core_nodes, res=res)
+    labels_init= cluster_subset(G, core_nodes,res=res,densify=densify,adj_list=adj_list)
 
     if rem_nodes is not None:
         remaining_nodes_init = rem_nodes
@@ -288,12 +287,12 @@ def process_list_of_layers(list_of_layer_list,n):
 
 
 
-def find_intersection_layers(G, core_layer,rem_nodes=None,eps=0,mode='one_layer',res=1.0):
+def find_intersection_layers(G, core_layer,rem_nodes=None,eps=0,mode='one_layer',res=1.0,densify=False,adj_list=None):
 
 
     if mode == 'one_layer':
-        layer_list = Parallel(n_jobs=10)(delayed(find_one_layer_intersection)(G,core_layer,rem_nodes,eps,res) for _ in range(10))
-        print([len(layer) for layer in layer_list])
+        layer_list = Parallel(n_jobs=10)(delayed(find_one_layer_intersection)(G,core_layer,rem_nodes,eps,res,densify,adj_list) for _ in range(10))
+        #print([len(layer) for layer in layer_list])
 
         layer_candidate=set(layer_list[0])
         for i in range(1,10):
@@ -302,28 +301,17 @@ def find_intersection_layers(G, core_layer,rem_nodes=None,eps=0,mode='one_layer'
         return layer_candidate
 
     elif mode == 'two_layers':
-        list_of_layer_list = Parallel(n_jobs=10)(delayed(find_two_layers_intersection)(G,core_layer,rem_nodes,eps,res) for _ in range(10))
+        list_of_layer_list = Parallel(n_jobs=10)(delayed(find_two_layers_intersection)(G,core_layer,rem_nodes,eps,res,densify,adj_list) for _ in range(10))
 
-        print("Started processing")
 
         Layer_list=process_list_of_layers(list_of_layer_list,G.vcount())
 
-        print("Finished processing")
 
         return Layer_list
 
 
     else:
-        raise KeyError(f"{mode} is not a valid mode for finding intersection layers")
-
-
-
-
-
-
-
-
-
+        raise KeyError(mode," is not a valid mode for finding intersection layers")
 
 
 #This is the method designed to show stability of points w.r.t. reproducibility specifically.
@@ -335,8 +323,9 @@ def stable_rank(self,layer_extraction_params=None):
 
     #Initiate parameters
     core_fraction=layer_extraction_params.get('core_fraction',0.2)
-    purify=layer_extraction_params.get('purify',0)
     res=layer_extraction_params.get('resolution',1)
+    densify=layer_extraction_params.get('densify',False)
+    knn_list_n=np.array(self.knn_list).astype(int)
 
 
 
@@ -353,57 +342,45 @@ def stable_rank(self,layer_extraction_params=None):
     eps = 0  # This is set to 0 for now. Implies normal majority. Can be tweaked later
 
     #Get First stable layer.
-    layer_candidate=find_intersection_layers(G,core_nodes,eps=eps,mode='one_layer',res=res)
+    layer_candidate=find_intersection_layers(G,core_nodes,eps=eps,mode='one_layer',res=res,densify=densify,adj_list=knn_list_n)
 
     # Include points from core.
     core_nodes_candidate = find_intersection_layers(G, core_nodes, rem_nodes=np.array(core_nodes).astype(int), eps=eps,
-                                                    mode='one_layer', res=res)
+                                                    mode='one_layer', res=res,densify=densify,adj_list=knn_list_n)
 
-    #print("Number of core nodes selected", len(core_nodes_candidate))
-
-    print(len(core_nodes_candidate),len(layer_candidate))
 
     layer_candidate = list(core_nodes_candidate) + list(layer_candidate)
-
-    print("\n First stable layer size=",len(layer_candidate),'\n')
 
 
     #Here we can provide a new hierarchy from start upto layer_candidate.
 
     Layers = [list(layer_candidate)]
-    remaining_nodes = set([i for i in range(n)])
-    remaining_nodes = remaining_nodes - (set(layer_candidate))
+    remaining_nodes = set([i for i in range(n)]) - (set(layer_candidate))
 
 
-    curr_nodes=[]
-    for layer in Layers:
-        for node in layer:
-            curr_nodes.append(node)
+    curr_nodes=list(layer_candidate)
 
-    #Get second stable layer. #This needs fixing. #Here let's get it layer-by-layer?
-    #Probably remove stability?
-
-    print("Remaining layers:")
-
-    New_set_of_layers = find_intersection_layers(G, np.array(curr_nodes).astype(int),eps=eps,mode='two_layers',res=res)
+    New_set_of_layers = find_intersection_layers(G, np.array(curr_nodes).astype(int),eps=eps,mode='two_layers',res=res,densify=densify,adj_list=knn_list_n)
     for layer in New_set_of_layers:
         Layers.append(layer)
         remaining_nodes = remaining_nodes - (set(layer))
-        print(len(layer),end=' ')
 
 
-#    Layers.append(list(layer_candidate))
-
-#    print("\n Second stable layer size=",len(layer_candidate),'\n')
-
-    #The remaining is the last layer.
-#    remaining_nodes=remaining_nodes-(set(layer_candidate))
     layer=[]
     for i in remaining_nodes:
         layer.append(i)
 
     Layers.append(layer)
 
+    print("Completed with layer size:")
+    for layer in Layers:
+        print(len(layer),end=' ')
+    print('\n')
+
 
 
     return Layers
+
+
+
+
