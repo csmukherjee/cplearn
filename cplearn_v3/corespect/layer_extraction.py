@@ -1,317 +1,61 @@
-from joblib import Parallel, delayed
-from numba import njit
+#Densification has not been used yet.
+from kneed import KneeLocator
+import igraph as ig
 
+from ..utils.gen_utils import get_kNN,get_edge_list,get_igraph_from_knn_list,get_induced_knn
+from ..utils.stable_core_extraction import *
+
+from .ranking import FlowRank
+
+from matplotlib import pyplot as plt
 
 import numpy as np
-import leidenalg
 
-from ..utils.densify import densify_v0
+def cutoffs(values, eps=1/400, mass=0.99, win=50, rel_slope=0.01):
+    v = np.asarray(values, float)
+    # assume v is already sorted desc
+    out = {}
 
+    # 1) last non-zero
+    nz = np.argmax(v[::-1] > 0)
+    out["last_nonzero"] = len(v) - nz if v[-1] == 0 else len(v)
 
-def cluster_subset(G,core_nodes,res,densify=False,adj_list=None):
+    # 2) absolute threshold
+    i_eps = np.searchsorted(-v, -eps, side="left")
+    out["value>eps"] = i_eps
 
-    n=G.vcount()
+    # 3) cumulative mass
+    cs = np.cumsum(v)
+    total = cs[-1] if cs[-1] > 0 else 1.0
+    i_mass = np.searchsorted(cs, mass * total, side="left") + 1
+    out["cumu_mass"] = i_mass
 
-    G_core = G.induced_subgraph(core_nodes)
+    # 4) knee (simple 2-line distance method)
+    x = np.arange(len(values))
+    y = values
 
-    if densify:
-        print("densifying...")
-        G_core=densify_v0(adj_list,G,G_core,core_nodes)
+    knee = KneeLocator(x, y, curve='convex', direction='decreasing')
+    knee_point = knee.knee
+    out["knee"] = knee_point
 
+    # 5) flat-tail via relative slope
+    vp=v[int(0.05*len(v)):]
+    dv = np.abs(np.diff(vp, prepend=vp[0]))
+    # rolling mean of |Δv|/v
+    rel = (dv / np.maximum(vp, 1e-12))
+    rel_roll = np.convolve(rel, np.ones(win)/win, mode="same")
+    flat_idx = np.argmax(rel_roll < rel_slope)  # first True
+    out["flat_tail"] = int(flat_idx) if rel_roll[flat_idx] < rel_slope else len(v)
 
-    partition = leidenalg.find_partition(
-        G_core,
-        leidenalg.RBConfigurationVertexPartition,  # modularity-based partition
-        resolution_parameter=res, # <-- control resolution here
-        seed = np.random.randint(int(1e9))
-    )
+    return out
 
-    # Map back to original node ids
-    id_map = np.array(G_core.vs["id"], dtype=int)
 
-    # Fill label vector using membership vector
-    labels = -1 * np.ones(n, dtype=int)
-    labels[id_map] = partition.membership
-    return labels
 
 
-def partitioned_majority_addition(edge_list,deg_list,n, cnum, final_labels, candidate_set_mask, eps=0):
+#Add partitioned majority
+def partitioned_majority():
 
-
-    votes=np.zeros((n,cnum))
-    added_nodes=[]
-
-    for u,v in edge_list:
-
-        c_idx=int(final_labels[v])
-        if candidate_set_mask[u]==1 and c_idx!=-1:
-                votes[u,c_idx]+=1
-
-
-    for u in range(n):
-
-        if candidate_set_mask[u]==1:
-            if max(votes[u])>(0.5+eps)*deg_list[u]:
-                final_labels[u]=np.argmax(votes[u])
-                candidate_set_mask[u]=0
-                added_nodes.append(u)
-
-
-
-    return final_labels,candidate_set_mask,added_nodes
-
-
-#This is trickier.
-def partitioned_max_addition(edge_list,deg_list,n, cnum, final_labels, candidate_set_mask, eps=0):
-    votes = np.zeros((n, cnum))
-    added_nodes = []
-
-    for u, v in edge_list:
-
-        c_idx = int(final_labels[v])
-        if candidate_set_mask[u] == 1 and c_idx != -1:
-            votes[u, c_idx] += 1
-
-    norm_votes=votes/deg_list.reshape(-1, 1)
-
-    max_list=np.max(norm_votes,axis=1)
-    nonzero_vals = max_list[max_list != 0]
-    th = np.quantile(nonzero_vals, 0.75)
-#    th=np.quantile(max_list, 0.75)
-
-    #print([np.quantile(max_list, 0.1*ell) for ell in range(10)],flush=True)
-
-
-    for u in range(n):
-
-        if candidate_set_mask[u] == 1:
-            if max(votes[u]) > th * deg_list[u]:
-                final_labels[u] = np.argmax(votes[u])
-                candidate_set_mask[u] = 0
-                added_nodes.append(u)
-
-
-    return final_labels,candidate_set_mask,added_nodes
-
-
-
-
-#Control the first layer here.
-def partitioned_majority_stage1(G, cnum, proxy_labels,remaining_nodes, eps):
-    round_num=0
-    layer=[]
-    tolerance=int(0.005*G.vcount())
-    n=G.vcount()
-
-    edge_list=G.get_edgelist()
-    deg_list=np.array(G.outdegree())
-    candidate_set_mask=np.zeros(n).astype(int)
-    candidate_set_mask[remaining_nodes]=1
-
-
-    while True:
-        n0 = np.sum(proxy_labels != -1)
-        proxy_labels, candidate_set_mask,added_nodes = partitioned_majority_addition(edge_list,deg_list,n, cnum, proxy_labels, candidate_set_mask, eps=eps)
-
-        for ell in added_nodes:
-            layer.append(ell)
-
-        n1 = np.sum(proxy_labels != -1)
-
-        if n1 - n0 < tolerance:
-
-            remaining_nodes=candidate_set_mask.nonzero()[0]
-
-            return layer,proxy_labels,remaining_nodes
-
-
-        if n0 > 0.95 * G.vcount():
-            remaining_nodes = candidate_set_mask.nonzero()[0]
-            return layer,proxy_labels,remaining_nodes
-
-        round_num += 1
-
-
-
-
-
-#Control the second layer here.
-def partitioned_majority_stage2(G, cnum, proxy_labels, remaining_nodes):
-    round_num=0
-    layer=[]
-    tolerance=int(0.005*G.vcount())
-    n=G.vcount()
-
-    edge_list=G.get_edgelist()
-    deg_list=np.array(G.outdegree())
-    candidate_set_mask=np.zeros(n).astype(int)
-    candidate_set_mask[remaining_nodes]=1
-
-    layer_list=[]
-
-    while True:
-        n0 = np.sum(proxy_labels != -1)
-
-        proxy_labels, candidate_set_mask, added_nodes = partitioned_max_addition(edge_list,deg_list,n, cnum, proxy_labels, candidate_set_mask, eps=0)
-
-        for ell in added_nodes:
-            layer.append(ell)
-
-        layer_list.append(added_nodes)
-
-        n1 = np.sum(proxy_labels != -1)
-
-
-        if n1 - n0 < tolerance:
-            remaining_nodes=candidate_set_mask.nonzero()[0]
-
-            return layer,proxy_labels,remaining_nodes,layer_list
-
-
-
-        if n0 > 0.95 * G.vcount():
-            remaining_nodes =candidate_set_mask.nonzero()[0]
-
-            return layer,proxy_labels,remaining_nodes,layer_list
-
-        round_num += 1
-
-
-
-#from collections import Counter
-
-def find_one_layer_intersection(G,core_nodes,rem_nodes,eps,res,densify,adj_list):
-
-
-    labels_init= cluster_subset(G, core_nodes,res=res,densify=densify,adj_list=adj_list)
-
-    #print(Counter(labels_init),flush=True)
-
-
-    if rem_nodes is not None:
-        remaining_nodes_init = rem_nodes
-
-    else:
-        remaining_nodes_init = np.array(list(set([i for i in range(G.vcount())]) - set(core_nodes))).astype(int)
-
-    cnum = len(set(labels_init)) - 1
-    layer, proxy_labels_init, remaining_nodes_init = partitioned_majority_stage1(G, cnum, labels_init,
-                                                                                 remaining_nodes_init, eps)
-
-    return layer
-
-def find_two_layers_intersection(G,core_nodes,rem_nodes,eps,res,densify,adj_list):
-
-    labels_init= cluster_subset(G, core_nodes,res=res,densify=densify,adj_list=adj_list)
-
-    if rem_nodes is not None:
-        remaining_nodes_init = rem_nodes
-
-    else:
-        remaining_nodes_init = np.array(list(set([i for i in range(G.vcount())]) - set(core_nodes))).astype(int)
-
-    cnum = len(set(labels_init)) - 1
-    layer1, proxy_labels_init, remaining_nodes_init = partitioned_majority_stage1(G, cnum, labels_init,
-                                                                                  remaining_nodes_init, eps)
-
-    #Remaining nodes need to be updated to be reflected here.
-
-    layer2, proxy_labels_init, remaining_nodes_init,layer_list = partitioned_majority_stage2(G, cnum, proxy_labels_init,
-                                                                                  remaining_nodes_init)
- #   layer = layer1 + layer2
- #   return layer
-    f_layer_list=[layer1]
-    f_layer_list.extend(layer_list)
-
-    return f_layer_list
-
-
-def merge_until_threshold(list_set, n,size_th_frac=0.1):
-    threshold = int(size_th_frac * n)
-    merged, cur = [], []
-    cur_len = 0
-
-    for lst in list_set:
-        cur.extend(lst)
-        cur_len += len(lst)
-        if cur_len >= threshold:
-            merged.append(cur)
-            cur, cur_len = [], 0
-
-    if cur:
-        merged.append(cur)
-
-    # Ensure last block also meets threshold (if possible)
-    if len(merged) > 1 and len(merged[-1]) < threshold:
-        merged[-2].extend(merged[-1])
-        merged.pop()
-
-    return merged
-
-
-#Here we use the list of lists to obtain a cleaner list. This is a fast process.
-def process_list_of_layers(list_of_layer_list,n):
-
-    Layer_list=[]
-    iter_num=len(list_of_layer_list)
-
-    cur_layer=[[] for _ in range(iter_num)]
-    t=0
-    c=0
-    while True:
-
-        for ell in range(0,iter_num):
-            if t<len(list_of_layer_list[ell]):
-                cur_layer[ell].extend(list_of_layer_list[ell][t])
-
-            else:
-                c+=1
-
-        sets = [set(lst) for lst in cur_layer]
-
-        # Intersect all
-        common = set.intersection(*sets)
-        Layer_list.append(list(common))
-
-        for ell in range(iter_num):
-            cur_layer[ell]=[x for x in cur_layer[ell] if x not in common]
-
-        t+=1
-        if c>=iter_num:
-
-            Layer_list=merge_until_threshold(Layer_list,n)
-
-            return Layer_list
-
-
-
-
-
-def find_intersection_layers(G, core_layer,rem_nodes=None,eps=0,mode='one_layer',res=1.0,densify=False,adj_list=None):
-
-
-    if mode == 'one_layer':
-        layer_list = Parallel(n_jobs=10)(delayed(find_one_layer_intersection)(G,core_layer,rem_nodes,eps,res,densify,adj_list) for _ in range(10))
-        #print([len(layer) for layer in layer_list])
-
-        layer_candidate=set(layer_list[0])
-        for i in range(1,10):
-            layer_candidate = layer_candidate.intersection(set(layer_list[i]))
-
-        return layer_candidate
-
-    elif mode == 'two_layers':
-        list_of_layer_list = Parallel(n_jobs=10)(delayed(find_two_layers_intersection)(G,core_layer,rem_nodes,eps,res,densify,adj_list) for _ in range(10))
-
-
-        Layer_list=process_list_of_layers(list_of_layer_list,G.vcount())
-
-
-        return Layer_list
-
-
-    else:
-        raise KeyError(mode," is not a valid mode for finding intersection layers")
+    return None
 
 
 #This is the method designed to show stability of points w.r.t. reproducibility specifically.
@@ -322,16 +66,45 @@ def stable_rank(self,layer_extraction_params=None):
     n=len(final_score)
 
     #Initiate parameters
-    core_fraction=layer_extraction_params.get('core_fraction',0.2)
+    core_fraction=layer_extraction_params.get('core_fraction',0.1)
+
+    early_cutoff=layer_extraction_params.get('early_cutoff',False)
+
+    if early_cutoff:
+        core_selection_mode="knee"
+    else:
+        core_selection_mode="cumu_mass"
+
+
+
     res=layer_extraction_params.get('resolution',1)
+    self.resolution=res
+
+
     densify=layer_extraction_params.get('densify',False)
+    fine_grained =layer_extraction_params.get('fine_grained',False)
     knn_list_n=np.array(self.knn_list).astype(int)
 
+    q=layer_extraction_params.get('q',20)
+    r=layer_extraction_params.get('r',10)
+
+
+    plt.figure(figsize=(8, 6))
+    values = sorted(final_score.values(), reverse=True)
+    cuts=cutoffs(values)
+    for name, idx in cuts.items():
+        print(f"{name:>12} : {idx}")
+    plt.plot(values, marker='o', linewidth=2)
+    plt.title('FlowRank values')
+    plt.show()
 
 
     #Get the core nodes
     sorted_nodes= sorted(final_score, key=lambda k: final_score[k], reverse=True)
-    core_nodes=np.array(sorted_nodes[:int(core_fraction*n)]).astype(int)
+    #core_nodes=np.array(sorted_nodes[:int(core_fraction*n)]).astype(int)
+
+    #Change: Using cutoff values:
+    core_nodes=np.array(sorted_nodes[:int(min(cuts[core_selection_mode],0.25*n))]).astype(int)
 
 
     print("Number of core nodes",len(core_nodes))
@@ -358,12 +131,12 @@ def stable_rank(self,layer_extraction_params=None):
     remaining_nodes = set([i for i in range(n)]) - (set(layer_candidate))
 
 
-    curr_nodes=list(layer_candidate)
-
-    New_set_of_layers = find_intersection_layers(G, np.array(curr_nodes).astype(int),eps=eps,mode='two_layers',res=res,densify=densify,adj_list=knn_list_n)
-    for layer in New_set_of_layers:
-        Layers.append(layer)
-        remaining_nodes = remaining_nodes - (set(layer))
+    # curr_nodes=list(layer_candidate)
+    #
+    # New_set_of_layers = find_intersection_layers(G, np.array(curr_nodes).astype(int),eps=eps,mode='two_layers',res=res,densify=densify,adj_list=knn_list_n)
+    # for layer in New_set_of_layers:
+    #     Layers.append(layer)
+    #     remaining_nodes = remaining_nodes - (set(layer))
 
 
     layer=[]
@@ -372,10 +145,116 @@ def stable_rank(self,layer_extraction_params=None):
 
     Layers.append(layer)
 
+
+    #ToDo: Write From Scratch. Be careful about igraph implementation and effect.
+    if fine_grained:
+        stable_core=Layers[0]
+        n1=len(stable_core)
+
+        #next_core_fraction=0.15 #This is random.
+        # X_stable = self.X[stable_core]
+        # n1 = X_stable.shape[0]
+        # knn_list_stable, knn_dists_stable = get_kNN(X_stable,q=q)
+
+        knn_list_stable, knn_dists_stable=get_induced_knn(knn_list_n,self.knn_dists,stable_core,n)
+
+        knn_list_stable_plain = [list(row) for row in knn_list_stable]
+        knn_dists_stable_plain = [list(row) for row in knn_dists_stable]
+
+
+        stable_score = FlowRank(knn_list_stable, r)
+        sorted_nodes = sorted(stable_score, key=lambda k: stable_score[k], reverse=True)
+
+
+        plt.figure(figsize=(8, 6))
+        values = sorted(stable_score.values(), reverse=True)
+
+        cuts = cutoffs(values)
+        for name, idx in cuts.items():
+            print(f"{name:>12} : {idx}")
+
+        plt.plot(values, marker='o', linewidth=2)
+        plt.title('FlowRank values on the stable core')
+        plt.show()
+
+
+        #ToDo: Here the code is very unclean.
+        # It is better to convert the whole problem to a subset, and then revert back.
+
+        G_stable=get_igraph_from_knn_list(knn_list_stable,len(stable_core))
+
+
+
+
+
+        # e_list = get_edge_list(knn_list_stable, n1)
+        # G_stable = ig.Graph(directed=True)
+        # G_stable.add_vertices(n1)
+        # G_stable.add_edges(e_list)
+        # G_stable.vs["id"] = list(range(n1))
+
+        new_core = np.array(sorted_nodes[:int(core_fraction * n)]).astype(int)
+
+        # Change: Using cutoff values:
+        #new_core=np.array(sorted_nodes[:int(cuts[core_selection_mode])]).astype(int)
+
+
+        res_t = choose_stopping_res(G_stable, new_core)
+        self.fine_grained_res=res_t
+
+        stable_new_core = find_intersection_layers(G_stable, new_core,
+                                                       rem_nodes=np.array(new_core).astype(int), eps=0,
+                                                       mode='one_layer', res=res_t, densify=densify,
+                                                       adj_list=knn_list_stable_plain)
+
+
+
+        print(len(stable_new_core),len(new_core))
+
+        rem_nodes=list(set([i for i in range(n1)])-set(stable_new_core))
+        labels_init = cluster_subset(G_stable, stable_new_core, res=res_t, densify=densify, adj_list=knn_list_stable_plain)
+        cnum=len(set(labels_init))-1
+
+        next_layer,proxy_labels,remaining_nodes=partitioned_majority_stage1(G_stable, cnum, labels_init,
+                                    np.array(rem_nodes).astype(int), eps)
+
+
+        rem_nodes=list(set(remaining_nodes)-set(next_layer))
+
+        new_Layers_init=[stable_new_core,next_layer,rem_nodes]
+
+        new_Layers=[]
+        for layer in new_Layers_init:
+            new_layer=[]
+            for node in layer:
+                new_layer.append(stable_core[node])
+
+            new_Layers.append(new_layer)
+
+
+
+        for i in range(1,len(Layers)):
+            new_Layers.append(Layers[i])
+
+        Layers=new_Layers
+
+        #ToDo: Fix this later. This is not the right way.
+        # Update k-nn list. This is first fix for coremap. #Should we have kept the original neighbors as well?
+
+        # for i, node in enumerate(stable_core):
+        #     self.knn_list[node] = [stable_core[ell] for ell in knn_list_stable[i]]
+        #     self.knn_dists[node] =knn_dists_stable[i]
+        #
+        # #Updating the graph directly. Slightly costly.
+        # G=get_igraph_from_knn_list(self.knn_list,n)
+        # G.vs["id"] = list(range(G.vcount()))
+        # self.G=G
+
     print("Completed with layer size:")
     for layer in Layers:
         print(len(layer),end=' ')
     print('\n')
+
 
 
 

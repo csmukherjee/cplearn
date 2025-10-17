@@ -226,13 +226,13 @@ def get_dataset(name,mode='PCA', dpath_in = None):
 
             X_0=scipy.sparse.load_npz(sc_path+'data.npz')
             label = np.load(sc_path+'labels.npy')
-
             X_0=X_0.log1p()
-
-            c_num=max(50,len(set(label)))
-
-            svd = TruncatedSVD(n_components=c_num)
-            X = svd.fit_transform(X_0)
+            #
+            # c_num=max(50,len(set(label)))
+            #
+            # svd = TruncatedSVD(n_components=c_num)
+            # X = svd.fit_transform(X_0)
+            X=X_0
 
 
     elif name.startswith("IBD"):

@@ -3,10 +3,14 @@ import umap
 
 from .viz_tools import anchored_map
 
+import numpy as np
+
 class Coremap:
     def __init__(self,
         corespect_obj,
-        global_umap=None
+        global_umap=None,
+        fast_view=False,
+        anchor_finding_mode='default'
     ):
 
         self.core_obj=corespect_obj
@@ -15,12 +19,25 @@ class Coremap:
         self.G=corespect_obj.G
         self.X_umap=global_umap
         self.layers_=corespect_obj.layers_
+        self.fast_view=fast_view
+        self.anchor_finding_mode=anchor_finding_mode
 
         if self.global_umap is None:
             reducer = umap.UMAP(init='spectral')
             self.X_umap = reducer.fit_transform(self.X)
 
-        label_dict=anchored_map(self)
+
+        if self.fast_view is True:
+            label_dict = {}
+            curr_layer = []
+            for rounds, layer in enumerate(self.layers_):
+
+                curr_layer.extend(layer)
+                label_dict[rounds] = self.X_umap[np.array(curr_layer).astype(int)]
+
+
+        else:
+            label_dict=anchored_map(self)
 
 
         self.label_dict=label_dict

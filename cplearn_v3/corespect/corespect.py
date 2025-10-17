@@ -9,7 +9,7 @@ import igraph as ig
 
 
 #To-do: Automatic selection of core_fraction, q, and r (Rank outputs)
-def _extract_layers(self, method='quantile', layer_extraction_params=None):
+def _extract_layers(self, method='stable_rank', layer_extraction_params=None):
 
     #Parameters for ranking algorithm
     #Initial ranking of points using our decided ranking algorithm.
@@ -61,7 +61,7 @@ def _find_clusters(self,prop_method,find_cluster_params=None):
     if hasattr(find_clusters,prop_method):
         func = getattr(find_clusters,prop_method)
         if callable(func):
-            labels_ = func(self.X,self.layers,find_cluster_params)
+            labels_ = func(self,find_cluster_params)
 
         else:
             raise TypeError(f"{prop_method} is not callable")
@@ -75,6 +75,7 @@ class Corespect:
     def __init__(self, X=None):
 
         self.X = X
+        self.count_mat=None
         self.n = X.shape[0]
 
         self.knn_list = None
@@ -82,12 +83,15 @@ class Corespect:
         self.G = None
         self.FlowRank_score=None
 
-
         self.layers_=None
         self.labels_=None
 
+        self.fine_grained_res=None
+
         self.set_labels=None
         self.set_layers=None
+
+        self.resolution=None
 
 
 
@@ -101,15 +105,7 @@ class Corespect:
     # Propagation methods: {'majority','CDNN'}
     def find_clusters(self,prop_method='majority',find_cluster_params=None):
 
-
         labels_=_find_clusters(self,prop_method=prop_method,find_cluster_params=find_cluster_params)
         self.labels_=labels_
 
-    def container(self):
-        self.set_labels.append()
-        self.set_layers.append()
-
-
-    def get_layers_and_labels(self):
-        return self.layers_,self.labels_
 

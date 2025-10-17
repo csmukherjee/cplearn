@@ -1,13 +1,13 @@
 
 from ..utils.densify import densify_v0
-from ..utils.gen_utils import bipartite_NN
-
-from ..corespect.layer_extraction import find_intersection_layers
+from ..utils.stable_core_extraction import choose_stopping_res
 
 import leidenalg
 import numpy as np
 
 import time
+
+
 
 
 from joblib import Parallel, delayed
@@ -57,31 +57,18 @@ def determine_gmm_anchors(X_core,min_k=1,max_k=10,reg_covar=1e-6, random_state=0
 
     labels  = best.predict(X_core)
     centers = best.means_          # use as skeleton anchor points
-    return centers,labels
+    probs=best.predict_proba(X_core)
 
-
-def choose_stopping_res(G,core_nodes,thr=0.95):
-
-    n0=len(core_nodes)
-
-    n1=n0
-    t=1
-    while n1>thr*n0:
-        layer_candidate=find_intersection_layers(G,core_layer=core_nodes,rem_nodes=core_nodes,res=t)
-        n1=len(layer_candidate)
-        t+=0.25
-        print(t,n1,n0)
-
-    return t-0.25
-
+    return centers,labels,probs
 
 #The resolution can be made parameter free in the visualization step.
-def find_anchors(core_obj):
+def find_anchors(core_obj,anchor_finding_mode='binary'):
 
 
     G=core_obj.G
     adj_list=np.array(core_obj.knn_list).astype(int)
     X=core_obj.X
+    n=X.shape[0]
 
 
     layers_=core_obj.layers_
@@ -97,7 +84,11 @@ def find_anchors(core_obj):
         G_core = densify_v0(adj_list, G, G_core, core_nodes)
 
     #Obtain the suitable resolution.
-    res=choose_stopping_res(G,core_nodes,thr=0.95)
+    if core_obj.fine_grained_res is None:
+        res=choose_stopping_res(G,core_nodes,thr=0.95)
+
+    else:
+        res=core_obj.fine_grained_res
 
     partition = leidenalg.find_partition(
         G_core,
@@ -133,25 +124,77 @@ def find_anchors(core_obj):
     anchor_list = []
     anchors = []
     t=0
-    for i,cluster in enumerate(partition):
 
-        ng_list=[[] for _ in range(len(anchors_dict[i][0]))]
-        temp_labels=anchors_dict[i][1]
-        n_1=len(temp_labels)
-        for node in range(n_1):
-            ng_list[temp_labels[node]].append(G_core.vs["id"][cluster[node]])
+    #Get the overall prob_matrix?
 
 
+    if anchor_finding_mode=='default':
+
+        for i,cluster in enumerate(partition):
+
+            center_num=len(anchors_dict[i][0])
+
+            ng_list=[[] for _ in range(center_num)]
+            temp_labels=anchors_dict[i][1]
+            n_1=len(temp_labels)
+            for node in range(n_1):
+                ng_list[temp_labels[node]].append(G_core.vs["id"][cluster[node]])
 
 
-        for ng in ng_list:
-            anchor_list.append(ng)
-            anchors.append(np.mean(X[np.array(ng).astype(int)],axis=0))
+
+
+            for ng in ng_list:
+                anchor_list.append(ng)
+                anchors.append(np.mean(X[np.array(ng).astype(int)],axis=0))
 
         #Send the points connected to each center in the GMM-on-Leiden setup.
 
+        final_prob_vec=None
+
+    elif anchor_finding_mode=='smoothed':
+
+        final_prob_vec = [{} for _ in range(n)]
+
+        cx = 0
+        for i,cluster in enumerate(partition):
+
+
+
+            center_num=len(anchors_dict[i][0])
+            ng_list=[[] for _ in range(center_num)]
+            temp_labels=anchors_dict[i][1]
+            n_1=len(temp_labels)
+            for node in range(n_1):
+
+
+                for i1 in range(center_num):
+                    ng_list[i1].append(G_core.vs["id"][cluster[node]]) #Add the neighbors to each center.
+                    final_prob_vec[G_core.vs["id"][cluster[node]]][cx+i1]=anchors_dict[i][2][node,i1] #For each node, add the tuples of center_number,probability. This will be used later. in create_anchor_edge_list
+
+            cx+=center_num
+
+
+            for ng in ng_list:
+                anchor_list.append(ng)
+                anchors.append(np.mean(X[np.array(ng).astype(int)],axis=0))
+
+
+        tc=0
+
+
+
+        print(len(anchor_list))
+        for  u in range(len(anchor_list)):
+            for v in anchor_list[u]:
+                tc+=len(final_prob_vec[v].keys())
+
+        print("Total GMM nodes=",tc)
+
 
     anchor_distances = []
+
+
+
     for i in range(len(anchor_list)):
         vec=[]
         for j in anchor_list[i]:
@@ -169,7 +212,7 @@ def find_anchors(core_obj):
         anchored_list_sorted.append(list(idx_sorted))
         anchored_dist_sorted.append(list(dist_sorted))
 
-    return anchored_list_sorted,anchored_dist_sorted
+    return anchored_list_sorted,anchored_dist_sorted,final_prob_vec
 
 
 

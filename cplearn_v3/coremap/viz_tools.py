@@ -23,12 +23,13 @@ def _make_epochs_per_sample(weights, n_epochs):
 
 
 
-def _create_anchored_edge_list(corespect_obj,anchor_list,anchor_distances,X_umap):
+def _create_anchored_edge_list(corespect_obj,anchor_list,anchor_distances,X_umap,anchor_finding_mode,final_prob_vec):
 
     X_p=corespect_obj.X
     G_p=corespect_obj.G
     knn_list=corespect_obj.knn_list
     knn_dists=corespect_obj.knn_dists
+    core_layer=corespect_obj.layers_[0]
 
     P_vec = varying_heat_kernel(knn_dists)
 
@@ -49,17 +50,44 @@ def _create_anchored_edge_list(corespect_obj,anchor_list,anchor_distances,X_umap
     for u in range(len(anchor_list)):
         anchor_coordinates.append(np.mean(X_umap[anchor_list[u]],axis=0))
 
+    if anchor_finding_mode == 'default':
+        P_vec_anchor=varying_heat_kernel(anchor_distances,th=0.1*len(core_layer))
 
-    P_vec_anchor=varying_heat_kernel(anchor_distances,th=np.sqrt(X_p.shape[0]))
+        anchored_edges_from=[]
+        anchor_to=[]
+        anchored_weights=[]
+        for u in range(len(anchor_list)):
+            for j,v in enumerate(anchor_list[u]):
+                anchored_edges_from.append(v)
+                anchor_to.append(anchor_coordinates[u])
+                anchored_weights.append(P_vec_anchor[u][j])
 
-    anchored_edges_from=[]
-    anchor_to=[]
-    anchored_weights=[]
-    for u in range(len(anchor_list)):
-        for j,v in enumerate(anchor_list[u]):
-            anchored_edges_from.append(v)
-            anchor_to.append(anchor_coordinates[u])
-            anchored_weights.append(P_vec_anchor[u][j])
+
+    elif anchor_finding_mode == 'smoothed':
+        fx=0
+        P_vec_anchor = varying_heat_kernel(anchor_distances, th=0.1*len(core_layer))
+
+        anchored_edges_from = []
+        anchor_to = []
+        anchored_weights = []
+        for u in range(len(anchor_list)):
+            for j, v in enumerate(anchor_list[u]):
+                anchored_edges_from.append(v)
+                anchor_to.append(anchor_coordinates[u])
+
+                if u in final_prob_vec[v].keys():
+                    anchored_weights.append(P_vec_anchor[u][j]*final_prob_vec[v][u]) #Normalizing with GMM_probability.
+                    fx+=1
+
+                else:
+                    anchored_weights.append(P_vec_anchor[u][j])
+
+
+        print("Total weights distributed=",fx)
+
+    else:
+        raise KeyError('Unknown anchor_finding_mode')
+
 
 
     return edges_from,edges_to,weights,anchored_edges_from,anchor_to,anchored_weights
@@ -327,9 +355,9 @@ def anchored_map_single_layer(edge_from_global,edge_to_global,weights_global,anc
 
 def anchored_map(coremap):
 
-    anchor_list,anchor_distances=find_anchors(coremap.core_obj)
+    anchor_list,anchor_distances,final_prob_vec=find_anchors(coremap.core_obj,anchor_finding_mode=coremap.anchor_finding_mode)
 
-    edge_from,edge_to,weights,anchored_edge_from,anchor_to,anchored_weights=_create_anchored_edge_list(coremap.core_obj,anchor_list,anchor_distances,coremap.X_umap)
+    edge_from,edge_to,weights,anchored_edge_from,anchor_to,anchored_weights=_create_anchored_edge_list(coremap.core_obj,anchor_list,anchor_distances,coremap.X_umap,coremap.anchor_finding_mode,final_prob_vec)
 
 
 
@@ -339,6 +367,7 @@ def anchored_map(coremap):
     prev_coordinate=None
 
     label_dict={}
+
 
     curr_layer=[]
 

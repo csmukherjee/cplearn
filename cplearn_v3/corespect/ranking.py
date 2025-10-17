@@ -9,6 +9,61 @@ from ..utils.gen_utils import get_kNN
 from ..utils.gen_utils import get_edge_list
 import igraph as ig
 
+import numpy as np
+
+from numba import types
+from numba.typed import List
+
+
+def truncate_ng_list(ng_list, r):
+    """
+    Keep only the first r neighbors per node.
+    Works for both list-of-lists and NumPy arrays.
+    """
+    # Case 1: ng_list is a NumPy array
+    if isinstance(ng_list, np.ndarray):
+        n, k = ng_list.shape
+        if r >= k:
+            return ng_list
+        return ng_list[:, :r]
+
+    # Case 2: ng_list is a Python list of lists
+    out = []
+    for row in ng_list:
+        if len(row) > r:
+            out.append(row[:r])
+        else:
+            out.append(row[:])
+    return out
+
+
+
+def ensure_list_of_lists(ng_list):
+    """
+    Converts ng_list (either np.ndarray or list of lists)
+    into a numba.typed.List of lists of int64.
+    """
+    nb_list = List.empty_list(types.ListType(types.int64))
+
+    # Case 1: already numpy array (n x k)
+    if isinstance(ng_list, np.ndarray):
+        for row in ng_list:
+            inner = List.empty_list(types.int64)
+            for v in row:
+                inner.append(int(v))
+            nb_list.append(inner)
+
+    # Case 2: already Python list of lists
+    else:
+        for row in ng_list:
+            inner = List.empty_list(types.int64)
+            for v in row:
+                inner.append(int(v))
+            nb_list.append(inner)
+
+    return nb_list
+
+
 
 
 @njit
@@ -70,6 +125,8 @@ def ascending_walk(ng_list,init_score,times):
 
 def FLOW_rank_optimized(ng_list,init_score,r):
 
+
+
     times=200
     v_cover_n=ascending_walk(ng_list,init_score,times)
 
@@ -86,9 +143,16 @@ def FLOW_rank_optimized(ng_list,init_score,r):
 
 def FlowRank(knn_list,r):
 
+    print("Working with list of list FlowRank")
+
     r=int(r)
-    init_score=init_random_walk(knn_list.astype(np.int64))
-    final_score=FLOW_rank_optimized(knn_list[:,0:r].astype(np.int64),init_score,r)
+
+
+    ng_list=ensure_list_of_lists(knn_list)
+    init_score=init_random_walk(ng_list)
+
+    ng_list_for_ascend=truncate_ng_list(ng_list,r)
+    final_score=FLOW_rank_optimized(ng_list_for_ascend,init_score,r)
 
     return final_score
 
