@@ -22,14 +22,69 @@ def _make_epochs_per_sample(weights, n_epochs):
     return result
 
 
+import numpy as np
+
+
+def get_adj_dists(adj_list, X, metric="euclidean"):
+    """
+    Sorts each adjacency list by increasing distance between node i and its neighbors.
+
+    Parameters
+    ----------
+    adj_list : list[list[int]]
+        Adjacency list (neighbors for each node)
+    X : np.ndarray, shape (n, d)
+        Node feature matrix
+    metric : str, optional
+        Distance metric ('euclidean' or 'cosine')
+
+    Returns
+    -------
+    sorted_adj : list[list[int]]
+        Sorted adjacency list by distance
+    sorted_dists : list[list[float]]
+        Sorted list of corresponding distances
+    """
+    n = len(adj_list)
+    sorted_adj = []
+    sorted_dists = []
+
+    for i in range(n):
+        neighbors = np.array(adj_list[i]).astype(int)
+        if neighbors.size == 0:
+            sorted_adj.append([])
+            sorted_dists.append([])
+            continue
+
+        # Compute distances to all neighbors
+        if metric == "euclidean":
+            dists = np.linalg.norm(X[neighbors] - X[i], axis=1)
+        elif metric == "cosine":
+            xi = X[i]
+            sims = X[neighbors] @ xi / (
+                    np.linalg.norm(X[neighbors], axis=1) * np.linalg.norm(xi) + 1e-12
+            )
+            dists = 1 - sims
+        else:
+            raise ValueError("metric must be 'euclidean' or 'cosine'")
+
+        # Sort neighbors by distance
+        order = np.argsort(dists)
+        sorted_adj.append(neighbors[order].tolist())
+        sorted_dists.append(dists[order].tolist())
+
+    return sorted_adj, sorted_dists
+
 
 def _create_anchored_edge_list(corespect_obj,anchor_list,anchor_distances,X_umap,anchor_finding_mode,final_prob_vec):
 
-    X_p=corespect_obj.X
-    G_p=corespect_obj.G
-    knn_list=corespect_obj.knn_list
-    knn_dists=corespect_obj.knn_dists
+
     core_layer=corespect_obj.layers_[0]
+
+    X_p=corespect_obj.X
+    knn_list=corespect_obj.adj_list
+    knn_list,knn_dists=get_adj_dists(knn_list,X_p,metric='euclidean')
+
 
     P_vec = varying_heat_kernel(knn_dists)
 
@@ -387,7 +442,7 @@ def anchored_map(coremap):
 
         print(f"Shape of embedding after round {round} is {coordinate.shape}")
 
-        coordinate=anchored_map_single_layer(edge_from,edge_to,weights,anchored_edge_from,anchor_to,anchored_weights,coordinate,curr_layer,coremap.core_obj.G.vcount())
+        coordinate=anchored_map_single_layer(edge_from,edge_to,weights,anchored_edge_from,anchor_to,anchored_weights,coordinate,curr_layer,coremap.core_obj.X.shape[0])
         prev_coordinate=coordinate.copy()
         prev_layer=curr_layer.copy()
 

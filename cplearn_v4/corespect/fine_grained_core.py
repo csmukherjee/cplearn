@@ -34,7 +34,7 @@ def fine_grained_core(X,adj_list,layers_,stable_core_densification,auto_select_c
 
 
 
-    #---- --- Everything below is limited to stable core points -----
+    # ---- ---- ---- ---- Everything below is limited to stable core points ---- ---- ---- ----#
 
     stable_map=-1*np.ones(n,dtype=int)
     for i,node in enumerate(stable_core):
@@ -93,6 +93,9 @@ def fine_grained_core(X,adj_list,layers_,stable_core_densification,auto_select_c
     layer_candidate=find_intersection_layers(adj_list_fgc,core_nodes,ng_num=r,rem_nodes=np.array(core_nodes).astype(int),resolution=starting_resolution)
 
     #This is the new core. Now we can update the layers.
+
+    print("Number of original and filtered fine grained core nodes:",len(core_nodes),len(layer_candidate),flush=True)
+
 
 
 

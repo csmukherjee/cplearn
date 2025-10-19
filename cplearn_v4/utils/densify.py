@@ -60,144 +60,7 @@ def topk_indices_per_row(mat, k):
 import numpy as np
 from numba import njit, prange
 
-@njit(parallel=True, cache=True)
-def batch_random_walk_dense(adj_list, core_nodes, steps=5):
-    """
-    Baseline random walk: iterates over all n nodes each step.
-    No frontier pruning, no marking — for speed comparison.
-    """
-    n = len(adj_list)
-    m = len(core_nodes)
-    mat = np.zeros((m, n), dtype=np.float32)
-
-    # Precompute 1 / out-degree
-    deg_inv = np.zeros(n, dtype=np.float32)
-    for u in range(n):
-        deg = len(adj_list[u])
-        deg_inv[u] = 1.0 / deg if deg > 0 else 0.0
-
-    for i in prange(m):  # parallel over seeds
-        seed = core_nodes[i]
-
-        pi = np.zeros(n, np.float32)
-        new_pi = np.zeros(n, np.float32)
-        visits = np.zeros(n, np.float32)
-
-        pi[seed] = 1.0
-        visits[seed] = 1.0
-
-        for _ in range(steps):
-            new_pi.fill(0.0)
-
-            # --- Full-graph loop ---
-            for u in range(n):
-                p_u = pi[u]
-                if p_u == 0.0:
-                    continue
-                contrib = p_u * deg_inv[u]
-                for v in adj_list[u]:
-                    new_pi[v] += contrib
-
-            pi, new_pi = new_pi, pi
-            visits += pi  # accumulate whole vector
-
-        mat[i] = visits
-
-    return mat
-
-
 import time
-
-#@njit(parallel=False, cache=True)
-def batch_random_walk_profile(adj_list, core_nodes, steps=5,eps=1e-3):
-    n = len(adj_list)
-    m = len(core_nodes)
-    deg_inv = np.zeros(n, np.float32)
-    for u in range(n):
-        deg = len(adj_list[u])
-        deg_inv[u] = 1.0 / deg if deg > 0 else 0.0
-
-
-    max_frontier=max(1000, n//100)
-
-    start = time.time()
-    for i in range(m):
-        seed = core_nodes[i]
-        pi = np.zeros(n, np.float32)
-        new_pi = np.zeros(n, np.float32)
-        visits = np.zeros(n, np.float32)
-        pi[seed] = 1.0
-        visits[seed] = 1.0
-        active = np.empty(n, np.int64)
-        next_active = np.empty(n, np.int64)
-        marked = np.zeros(n, np.uint8)
-        active[0] = seed
-        active_len = 1
-
-        for step in range(steps):
-            t0 = time.time()
-            new_pi.fill(0.0)
-            next_len = 0
-
-            for t in range(active_len):
-                u = active[t]
-                p_u = pi[u]
-                if p_u <eps:
-                    continue
-                contrib = p_u * deg_inv[u]
-                for v in adj_list[u]:
-                    new_pi[v] += contrib
-                    if marked[v] == 0:
-                        marked[v] = 1
-                        next_active[next_len] = v
-                        next_len += 1
-
-            t1 = time.time()
-            for t in range(next_len):
-                marked[next_active[t]] = 0
-
-            if next_len > max_frontier:
-                vals = np.empty(next_len, np.float32)
-                for t in range(next_len):
-                    vals[t] = new_pi[next_active[t]]
-
-                # find threshold for top `max_frontier` nodes
-                k_drop = next_len - max_frontier
-                thr = np.partition(vals, k_drop)[k_drop]
-
-                # retain only high-mass nodes
-                new_len = 0
-                for t in range(next_len):
-                    v = next_active[t]
-                    if new_pi[v] >= thr:
-                        next_active[new_len] = v
-                        new_len += 1
-                next_len = new_len
-
-
-
-            t2 = time.time()
-
-            pi, new_pi = new_pi, pi
-            for t in range(next_len):
-                v = next_active[t]
-                visits[v] += pi[v]
-            t3 = time.time()
-
-            # swap frontier
-            tmp = active
-            active = next_active
-            next_active = tmp
-            active_len = next_len
-
-
-            if active_len == 0:
-                break
-
-            print(f"Step {step}: diffusion={t1-t0:.4f}s active_size={active_len}, mark_reset={t2-t1:.4f}s, accumulate={t3-t2:.4f}s")
-
-    print(f"Total time: {time.time() - start:.3f}s")
-
 
 
 @njit(parallel=True, cache=True)
@@ -322,7 +185,7 @@ def degree_within_subset_fast(adj_list, subset):
     deg_sub = np.zeros(len(subset), dtype=int)
 
     for i, u in enumerate(subset):
-        nbrs = adj_list[u]
+        nbrs = np.array(adj_list[u]).astype(np.int32)
         deg_full[i] = len(nbrs)
         deg_sub[i] = np.count_nonzero(mask[nbrs])
     return deg_full, deg_sub
@@ -359,7 +222,7 @@ def densify_rw(adj_list,subset_nodes):
 
     set_to_expand=np.array(set_to_expand).astype(int)
 
-    print("Number of nodes to expand and total number edges that could be added:",len(set_to_expand)," ",total_vacancy,total_vacancy/len(set_to_expand),flush=True)
+    print("Number of nodes to expand and total number edges that could be added:",len(set_to_expand)," ",total_vacancy,flush=True)
 
 
     if len(set_to_expand) == 0 or max(vacancy) == 0:

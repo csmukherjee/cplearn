@@ -1,8 +1,13 @@
 import numpy as np
 import leidenalg
 
+from .stable_core_utils import find_intersection_layers
 
 #TODO: Add choose_stopping_res function and add to config options
+
+
+
+
 
 
 def make_subgraph(adj_list, core_nodes):
@@ -19,7 +24,7 @@ def make_subgraph(adj_list, core_nodes):
     return G,G_core
 
 
-def cluster_core(adj_list, core_nodes, resolution, **kwargs):
+def cluster_subset(adj_list, core_nodes, resolution, **kwargs):
 
     """
     Cluster the core subgraph using the Leiden algorithm (directed version).

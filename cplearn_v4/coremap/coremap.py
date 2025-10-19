@@ -16,7 +16,7 @@ class Coremap:
         self.core_obj=corespect_obj
         self.global_umap=global_umap
         self.X=corespect_obj.X
-        self.G=corespect_obj.G
+        # self.G=corespect_obj.G
         self.X_umap=global_umap
         self.layers_=corespect_obj.layers_
         self.fast_view=fast_view
@@ -35,6 +35,7 @@ class Coremap:
                 curr_layer.extend(layer)
                 label_dict[rounds] = self.X_umap[np.array(curr_layer).astype(int)]
 
+            self.label_dict = label_dict
 
         else:
             label_dict=anchored_map(self)

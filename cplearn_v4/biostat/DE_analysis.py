@@ -10,6 +10,9 @@ from tabulate import tabulate
 ArrayLike = Union[np.ndarray, Sequence[int]]
 Label = Union[int, str]
 
+from scipy.stats import rankdata, norm
+import time
+
 
 @dataclass
 class DEOptions:
@@ -66,7 +69,8 @@ class DEAnalyzer:
 
         self.labels = np.asarray(labels)
         if self.labels.shape[0] != self.n_cells:
-            raise ValueError("labels length must match number of cells")
+
+            raise ValueError("labels length must match number of cells:",self.labels.shape[0], "vs. ", self.n_cells)
 
         self.layers = {k: np.asarray(v, dtype=int) for k, v in layers.items()}
         self._validate_layers_disjoint()
@@ -86,6 +90,9 @@ class DEAnalyzer:
             self._gene_keep_mask = nnz >= self.options.gene_filter_min_nonzero
         else:
             self._gene_keep_mask = np.ones(self.n_genes, dtype=bool)
+
+        self.X_masked = np.ascontiguousarray(self.X[:, self._gene_keep_mask])
+        self.genes_masked = self.genes[self._gene_keep_mask]
 
     # ---------- Validation helpers ----------
     def _validate_layers_disjoint(self) -> None:
@@ -123,6 +130,9 @@ class DEAnalyzer:
     ) -> pd.DataFrame:
         opts = self.options
 
+        print("Starting DE test between two groups:", meta, flush=True)
+        t01=time.time()
+
         # Early exit on tiny groups
         if idx_a.size < opts.min_cells_per_group or idx_b.size < opts.min_cells_per_group:
             return pd.DataFrame(columns=[
@@ -130,25 +140,38 @@ class DEAnalyzer:
                 "mean_a", "mean_b", "pct_expr_a", "pct_expr_b","z_score", *meta.keys()
             ])
 
+        t02=time.time()
+
         # Apply gene mask
-        mask = self._gene_keep_mask
-        X_a = self.X[idx_a][:, mask]
-        X_b = self.X[idx_b][:, mask]
-        genes_kept = self.genes[mask]
+        X_a = self.X_masked.take(idx_a, axis=0)
+        X_b = self.X_masked.take(idx_b, axis=0)
+        genes_kept = self.genes_masked
 
         n_g = genes_kept.size
         stats = np.empty(n_g, dtype=float)
         pvals = np.empty(n_g, dtype=float)
 
+        t03=time.time()
         # Means and detect pct for interpretability
         mean_a = X_a.mean(axis=0)
         mean_b = X_b.mean(axis=0)
+
+        t04=time.time()
+
+
         pct_a = (X_a > 0).mean(axis=0)
         pct_b = (X_b > 0).mean(axis=0)
+        t05=time.time()
+
+        print(f"Time for data slicing: {t02 - t01:.3f} seconds", flush=True)
+        print(f"Time for group extraction: {t03 - t02:.3f} seconds", flush=True)
+        print(f"Time for means computation: {t04 - t03:.3f} seconds", flush=True)
+        print(f"Time for pct computation: {t05 - t04:.3f} seconds", flush=True)
 
 
 
-
+        t0=time.time()
+        print("Pre-MWU filtering completed in:", t0 - t01, "seconds", flush=True)
 
 
         # Optional drop by detect pct
@@ -166,6 +189,9 @@ class DEAnalyzer:
                 stats = np.empty(n_g, dtype=float)
                 pvals = np.empty(n_g, dtype=float)
 
+
+        t1=time.time()
+
         # Run MWU (Wilcoxon rank-sum) per gene
         for g in range(n_g):
             # SciPy 1.7+: mannwhitneyu implements Wilcoxon rank-sum
@@ -180,6 +206,38 @@ class DEAnalyzer:
             except Exception:
                 stats[g] = np.nan
                 pvals[g] = 1.0
+
+        t2=time.time()
+
+        # Concatenate groups along axis=0  → shape (n_a+n_b, n_g)
+        X_all = np.vstack([X_a, X_b])
+        n1, n2 = X_a.shape[0], X_b.shape[0]
+        n = n1 + n2
+
+        # Compute ranks for each gene column in one go
+        # rankdata ranks along the first axis (across samples) independently for each gene
+        ranks = np.apply_along_axis(rankdata, 0, X_all)
+
+        # Sum of ranks for group A (first n1 rows)
+        R1 = ranks[:n1, :].sum(axis=0)
+
+        # Mann–Whitney U statistic per gene
+        U = R1 - n1 * (n1 + 1) / 2.0
+        stats = U
+
+        # Normal approximation (no ties correction here; fine for large n)
+        mean_U = n1 * n2 / 2.0
+        std_U = np.sqrt(n1 * n2 * (n + 1) / 12.0)
+
+        # z-score (two-sided)
+        z = (U - mean_U) / std_U
+        pvals = 2 * norm.sf(np.abs(z))
+
+        t3=time.time()
+
+        print(f"Time for pre-MWU filtering: {t1-t0:.3f} seconds", flush=True)
+        print(f"Time for MWU loop: {t2-t1:.3f} seconds", flush=True)
+        print(f"Time for rank-based U computation: {t3-t2:.3f} seconds", flush=True)
 
         # Rank-biserial effect size (for two-sided it's signed around direction of mean difference)
         n1 = X_a.shape[0]
@@ -206,6 +264,7 @@ class DEAnalyzer:
         # Avoid divide-by-zero
         z_score = np.divide(mean_diff, se, out=np.zeros_like(mean_diff), where=se > 0)
 
+        t4=time.time()
 
         df = pd.DataFrame({
             "gene": genes_kept,
@@ -231,7 +290,15 @@ class DEAnalyzer:
         # Canonical ordering: by p_adj then by |log2fc|
         #df = df.sort_values(["p_adj", "log2fc"], ascending=[True, False], ignore_index=True)
 
+        t5=time.time()
+
         df=self._sort_with_pvalue_buckets(df)
+
+        t6=time.time()
+
+        print(f"Time for assembling DataFrame: {t5-t4:.3f} seconds", flush=True)
+        print(f"Time for sorting results: {t6-t5:.3f} seconds", flush=True)
+
 
 
         return df
@@ -249,6 +316,9 @@ class DEAnalyzer:
         Global label comparison: cells with labels in set1 vs set2.
         If set2 is None, compare set1 vs all other labels (excluding ignore_label).
         """
+
+        t11 = time.time()
+
         set1 = set(set1)
         if set2 is None:
             others = set(np.unique(self.labels)) - set1 - {ignore_label}
@@ -264,6 +334,11 @@ class DEAnalyzer:
             "group_a": name1 if name1 is not None else f"{sorted(list(set1))}",
             "group_b": name2 if name2 is not None else f"{sorted(list(set2))}",
         }
+
+        t12= time.time()
+
+        print(f"Time for preparing indices: {t12 - t11:.3f} seconds", flush=True)
+
         return self._test_two_groups(idx_a, idx_b, meta)
 
     def run_layerwise(
@@ -504,7 +579,7 @@ class DEAnalyzer:
         for g in top_genes:
             sub = df[df["gene"] == g].copy()
             sub["abs_fc"] = sub["log2fc"].abs()
-            sub = sub.sort_values("abs_fc", ascending=False)  # sort by |log2fc|
+            sub = sub.sort_values("layer", ascending=True)  # sort by |log2fc|
             print(f"\n {g}")
             cols = ["layer"] + [m for m in metrics if m in sub.columns]
             disp = sub[cols].round(4)

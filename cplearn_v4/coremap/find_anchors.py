@@ -1,20 +1,35 @@
 
-from ..utils.densify import densify_v0
-from ..utils.stable_core_extraction import choose_stopping_res
+from ..utils.densify import densify_knn
+from ..utils.stable_core_utils import choose_stopping_res
 
 import leidenalg
 import numpy as np
 
 import time
 
+import igraph as ig
 
-
-
-from joblib import Parallel, delayed
 
 from sklearn.mixture import GaussianMixture
 
-def determine_gmm_anchors(X_core,min_k=1,max_k=10,reg_covar=1e-6, random_state=0):
+from tqdm import tqdm
+
+
+def should_continue(prev_bic, curr_bic, delta_bic_min=10.0):
+    # continue if improvement is at least -delta_bic_min (e.g., -10 or lower)
+
+    delta_bic_min=max(10, 1e-4 * abs(prev_bic))
+
+
+    return (curr_bic - prev_bic) <= -delta_bic_min
+
+def ok_new_component(gmm, n, min_frac=0.03):
+    w = gmm.weights_
+    return (w.min() >= min_frac) and ((w * n).min() >= max(30, min_frac*n))
+
+
+
+def determine_gmm_anchors(X_core,min_k=1,max_k=3,reg_covar=1e-6, random_state=0):
     """
     X_core: (n_core, 2) UMAP coords for core points
     Returns:
@@ -31,13 +46,15 @@ def determine_gmm_anchors(X_core,min_k=1,max_k=10,reg_covar=1e-6, random_state=0
     max_k = max(min_k, min(max_k, n))  # cap by data size
 
     # Try k=1..max_k, pick best by BIC
-    best = None
+    best_gmm = None
     k_pos=-1
     best_bic = np.inf
-    for k in range(min_k, max_k + 1):
+    prev_bic = None
+
+    for k in range(min_k, max_k):
         gm = GaussianMixture(
             n_components=k,
-            covariance_type="full",      # 'diag' is even faster; 'full' is fine in 2D
+            covariance_type="diag",      # 'diag' is even faster; 'full' is fine in 2D
             init_params="kmeans",
             n_init=3,
             max_iter=200,
@@ -47,28 +64,41 @@ def determine_gmm_anchors(X_core,min_k=1,max_k=10,reg_covar=1e-6, random_state=0
         bic = gm.bic(X_core)
         bic_list.append(bic)
 
-        if bic < best_bic:
-            best_bic, best = bic, gm
-            k_pos=k
 
-        #This is for fast mode.
-        if bic > best_bic:
-            break
+        if k == 1 or bic < best_bic:
+            # accept as current best
+            best_bic, best_gmm = bic, gm
 
-    labels  = best.predict(X_core)
-    centers = best.means_          # use as skeleton anchor points
-    probs=best.predict_proba(X_core)
+        if k > 1:
+            if not should_continue(prev_bic, bic, delta_bic_min=10.0):
+                break
+            if not ok_new_component(gm, len(X_core), min_frac=0.03):
+                break
+
+        prev_bic = bic
+
+
+
+    labels  = best_gmm.predict(X_core)
+    centers = best_gmm.means_          # use as skeleton anchor points
+    probs=best_gmm.predict_proba(X_core)
 
     return centers,labels,probs
 
+
 #The resolution can be made parameter free in the visualization step.
-def find_anchors(core_obj,anchor_finding_mode='binary'):
+def find_anchors(core_obj,anchor_finding_mode='binary',auto_select_resolution=False):
 
 
-    G=core_obj.G
-    adj_list=np.array(core_obj.knn_list).astype(int)
     X=core_obj.X
     n=X.shape[0]
+
+
+    adj_list=core_obj.adj_list
+    edges = [(u, v) for u in range(n) for v in adj_list[u] if u != v]
+
+    G = ig.Graph(edges=edges, directed=True)
+    G.vs["id"] = list(range(n))
 
 
     layers_=core_obj.layers_
@@ -79,16 +109,16 @@ def find_anchors(core_obj,anchor_finding_mode='binary'):
 
     G_core = G.induced_subgraph(core_nodes)
 
-    if densify:
-        print("densifying...")
-        G_core = densify_v0(adj_list, G, G_core, core_nodes)
+    # if densify:
+    #     print("densifying...")
+    #     G_core = densify_v0(adj_list, G, G_core, core_nodes)
 
     #Obtain the suitable resolution.
-    if core_obj.fine_grained_res is None:
+    if auto_select_resolution:
         res=choose_stopping_res(G,core_nodes,thr=0.95)
 
     else:
-        res=core_obj.fine_grained_res
+        res=core_obj.resolution
 
     partition = leidenalg.find_partition(
         G_core,
@@ -113,8 +143,15 @@ def find_anchors(core_obj,anchor_finding_mode='binary'):
 
 
 
-    anchors_dict = Parallel(n_jobs=-1)(
-        delayed(determine_gmm_anchors)(X[np.array(list(cluster)).astype(int)]) for cluster in partition)
+    anchors_dict = []
+    for cluster in tqdm(partition, desc="Fitting GMM anchors"):
+        anchors_dict.append(
+            determine_gmm_anchors(X[np.array(list(cluster)).astype(int)])
+        )
+
+    #
+    # anchors_dict = Parallel(n_jobs=6,backend='loky', batch_size='auto',prefer='processes')(
+    #     delayed(determine_gmm_anchors)(X[np.array(list(partition[x])).astype(int)]) for x in tqdm(range(len(partition))))
 
     t2=time.time()
 

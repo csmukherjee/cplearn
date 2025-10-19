@@ -40,5 +40,6 @@ def stable_core(X,knn_list, flowrank_score, auto_select_core_frac,core_frac,ng_n
     layer_candidate = list(core_nodes_candidate) + list(layer_candidate)
 
 
-    return [layer_candidate]
+
+    return [layer_candidate],adj_list
 

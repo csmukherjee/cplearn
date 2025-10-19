@@ -4,9 +4,88 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from ..utils.gen_utils import ensure_list_of_lists
-from cplearn_v4.utils.cluster_utils import cluster_subset
 
 from numba import njit, prange
+
+import leidenalg
+
+
+
+def make_subgraph(adj_list, core_nodes):
+    import igraph as ig
+
+    n = len(adj_list)
+    edges = [(u, v) for u in range(n) for v in adj_list[u] if u != v]
+
+    G = ig.Graph(edges=edges, directed=True)
+    G.vs["id"] = list(range(n))  # Store original node ids
+
+    G_core = G.induced_subgraph(core_nodes)
+
+    return G,G_core
+
+
+
+
+
+
+
+def choose_stopping_res(adj_list,core_nodes,thr=0.95,starting_resolution=1):
+
+    n0=len(core_nodes)
+
+    n1=n0
+    t=starting_resolution
+    while n1>thr*n0 and t<5:
+        layer_candidate=find_intersection_layers(adj_list,core_nodes,ng_num=20,rem_nodes=np.array(core_nodes).astype(int),resolution=starting_resolution)
+        n1 = len(layer_candidate)
+        print(t,n1,n0)
+        t += 0.25
+
+
+    return t-0.5
+
+
+def cluster_subset(adj_list, core_nodes, resolution, **kwargs):
+
+    """
+    Cluster the core subgraph using the Leiden algorithm (directed version).
+
+    Parameters
+    ----------
+    adj_list : list[list[int]]
+        Adjacency list of the full directed graph.
+    core_nodes : list[int]
+        Indices of nodes forming the core subset.
+    resolution : float
+        Resolution parameter for Leiden clustering.
+    **kwargs :
+        Additional keyword arguments passed to leidenalg.find_partition.
+
+    Returns
+    -------
+    labels : np.ndarray of shape (n,)
+        Cluster labels for all nodes, with -1 for non-core nodes.
+    """
+
+
+    n=len(adj_list)
+    G,G_core= make_subgraph(adj_list,core_nodes)
+
+    partition = leidenalg.find_partition(
+        G_core,
+        leidenalg.RBConfigurationVertexPartition,  # modularity-based partition
+        resolution_parameter=resolution,  # <-- control resolution here
+        seed=np.random.randint(int(1e9)), **kwargs
+    )
+
+    id_map = np.array(G_core.vs["id"], dtype=int)
+
+    labels = -1 * np.ones(n, dtype=int)
+    labels[id_map] = partition.membership
+
+    return labels
+
 
 
 @njit(parallel=True)
@@ -124,19 +203,3 @@ def find_intersection_layers(adj_list,core_nodes,rem_nodes,ng_num,resolution):
         layer_candidate = layer_candidate.intersection(set(layer_list[i]))
 
     return layer_candidate
-
-
-def choose_stopping_res(adj_list,core_nodes,thr=0.95,starting_resolution=1):
-
-    n0=len(core_nodes)
-
-    n1=n0
-    t=starting_resolution
-    while n1>thr*n0 and t<5:
-        layer_candidate=find_intersection_layers(adj_list,core_nodes,ng_num=20,rem_nodes=np.array(core_nodes).astype(int),resolution=starting_resolution)
-        n1 = len(layer_candidate)
-        print(t,n1,n0)
-        t += 0.25
-
-
-    return t-0.5
