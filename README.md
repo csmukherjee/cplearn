@@ -1,5 +1,12 @@
 # cplearn
 
+[![PyPI version](https://badge.fury.io/py/cplearn.svg)](https://pypi.org/project/cplearn/)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
+[![Python versions](https://img.shields.io/pypi/pyversions/cplearn.svg)](https://pypi.org/project/cplearn/)
+[![Downloads](https://static.pepy.tech/badge/cplearn)](https://pepy.tech/project/cplearn)
+[![arXiv](https://img.shields.io/badge/arXiv-2507.08243-b31b1b.svg)](https://arxiv.org/abs/2507.08243)
+
+
 **cplearn** is a Python toolkit for unsupervised learning on data with underlying **core–periphery-like** structures.  
 The package includes:
 
