@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="First upload">
+    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="cplearn (almost) ready for release">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clustering_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/clustering_metrics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/corespace_execute.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/corespace_execute.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn/corespect/corespect.py" beforeDir="false" afterPath="$PROJECT_DIR$/cplearn/corespect/corespect.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/test.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,10 +20,16 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="Jupyter Notebook" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -35,7 +40,7 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/csmukherjee/cplearn&quot;,
+    &quot;url&quot;: &quot;https://github.com/csmukherjee/cplearn.git&quot;,
     &quot;accountId&quot;: &quot;7afa6971-1957-4864-b53f-704b248c1586&quot;
   }
 }</component>
@@ -51,8 +56,8 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/chandrasekharmukherjee/PycharmProjects/cplearn/coremap&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;in-work&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/chandrasekharmukherjee/PycharmProjects/cplearn&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -63,12 +68,18 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/coremap" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/cplearn_v4/utils" />
+      <recent name="$PROJECT_DIR$/cplearn_v4" />
+      <recent name="$PROJECT_DIR$/cplearn_v4/corespect" />
+      <recent name="$PROJECT_DIR$/cplearn_v3/corespect" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/nbconvert_templates" />
+      <recent name="$PROJECT_DIR$/cplearn_v4" />
+      <recent name="$PROJECT_DIR$/cplearn_v4/utils" />
+      <recent name="$PROJECT_DIR$/cplearn_v4/corespect" />
       <recent name="$PROJECT_DIR$/utils" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/corespect/clustering" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -110,7 +121,21 @@
       <workItem from="1750356233655" duration="20110000" />
       <workItem from="1751349923478" duration="599000" />
       <workItem from="1751551669795" duration="20000" />
-      <workItem from="1754169303534" duration="8353000" />
+      <workItem from="1754169303534" duration="18981000" />
+      <workItem from="1756265851313" duration="10102000" />
+      <workItem from="1757646890626" duration="9484000" />
+      <workItem from="1757727737291" duration="27319000" />
+      <workItem from="1758991349034" duration="1226000" />
+      <workItem from="1759018961424" duration="10515000" />
+      <workItem from="1759094466479" duration="129644000" />
+      <workItem from="1759611788261" duration="91257000" />
+      <workItem from="1759902281880" duration="6678000" />
+      <workItem from="1759911309708" duration="90160000" />
+      <workItem from="1760389626356" duration="40301000" />
+      <workItem from="1760512099238" duration="122389000" />
+      <workItem from="1760915893199" duration="62998000" />
+      <workItem from="1761424074131" duration="7825000" />
+      <workItem from="1761592816167" duration="6821000" />
     </task>
     <task id="LOCAL-00001" summary="revamp">
       <option name="closed" value="true" />
@@ -184,7 +209,63 @@
       <option name="project" value="LOCAL" />
       <updated>1754272010990</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="updated default values">
+      <option name="closed" value="true" />
+      <created>1754937042537</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1754937042537</updated>
+    </task>
+    <task id="LOCAL-00011" summary="New version">
+      <option name="closed" value="true" />
+      <created>1759437563284</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1759437563284</updated>
+    </task>
+    <task id="LOCAL-00012" summary="New version-ranking finished for now.">
+      <option name="closed" value="true" />
+      <created>1759564365309</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1759564365309</updated>
+    </task>
+    <task id="LOCAL-00013" summary="New version-ranking finished for now.">
+      <option name="closed" value="true" />
+      <created>1759878870757</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1759878870757</updated>
+    </task>
+    <task id="LOCAL-00014" summary="cplearn_v4">
+      <option name="closed" value="true" />
+      <created>1760677744126</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1760677744126</updated>
+    </task>
+    <task id="LOCAL-00015" summary="cplearn_v4">
+      <option name="closed" value="true" />
+      <created>1760842255756</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1760842255756</updated>
+    </task>
+    <task id="LOCAL-00016" summary="cplearn (almost) ready for release">
+      <option name="closed" value="true" />
+      <created>1761533474886</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1761533474887</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,6 +276,22 @@
     <MESSAGE value="some more clustering" />
     <MESSAGE value="weighted ranking" />
     <MESSAGE value="First upload" />
-    <option name="LAST_COMMIT_MESSAGE" value="First upload" />
+    <MESSAGE value="updated default values" />
+    <MESSAGE value="New version" />
+    <MESSAGE value="New version-ranking finished for now." />
+    <MESSAGE value="cplearn_v4" />
+    <MESSAGE value="cplearn (almost) ready for release" />
+    <option name="LAST_COMMIT_MESSAGE" value="cplearn (almost) ready for release" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
+          <url>file://$PROJECT_DIR$/DEG_analysis.ipynb</url>
+          <line>188</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
