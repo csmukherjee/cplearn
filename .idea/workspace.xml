@@ -4,58 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="cplearn_v4">
+    <list default="true" id="41a30c8b-5b4d-4020-9c09-e1e3af406f22" name="Changes" comment="cplearn (almost) ready for release">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aistats.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/coremap.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/coremap_graph_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/find_anchors.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/viz_tools.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/coremap/vizualizer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/corespect.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/find_clusters.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/find_clusters_cp.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/layer_extraction.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/corespect/ranking.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/slable_layer_extraction/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/clustering_algo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/densify.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/gen_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/louvain_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/utils/stable_core_extraction.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v3/validation/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/biostat/DE_analysis.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/biostat/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/coremap.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/coremap_graph_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/find_anchors.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/viz_tools.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/coremap/vizualizer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/cluster_core.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/config.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/corespect.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/diffusion.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/fine_grained_core.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/propagate.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/ranking.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/stable_core.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/corespect/stable_core_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/utils/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/utils/cluster_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/utils/densify.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/utils/gen_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cplearn_v4/utils/stable_core_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_call.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing_final.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing_old.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,7 +134,8 @@
       <workItem from="1760389626356" duration="40301000" />
       <workItem from="1760512099238" duration="122389000" />
       <workItem from="1760915893199" duration="62998000" />
-      <workItem from="1761424074131" duration="5822000" />
+      <workItem from="1761424074131" duration="7825000" />
+      <workItem from="1761592816167" duration="6821000" />
     </task>
     <task id="LOCAL-00001" summary="revamp">
       <option name="closed" value="true" />
@@ -303,7 +257,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760842255756</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="cplearn (almost) ready for release">
+      <option name="closed" value="true" />
+      <created>1761533474886</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1761533474887</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -318,7 +280,8 @@
     <MESSAGE value="New version" />
     <MESSAGE value="New version-ranking finished for now." />
     <MESSAGE value="cplearn_v4" />
-    <option name="LAST_COMMIT_MESSAGE" value="cplearn_v4" />
+    <MESSAGE value="cplearn (almost) ready for release" />
+    <option name="LAST_COMMIT_MESSAGE" value="cplearn (almost) ready for release" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
