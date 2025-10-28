@@ -15,7 +15,7 @@ The package includes:
 
 ---
 
-**Explore the  [Interactive vignette](https://csmukherjee.github.io/cplearn/tester.html) — highly recommended for understanding the pipeline.**
+## **Explore the  [Interactive vignette](https://csmukherjee.github.io/cplearn/tester.html) — highly recommended for understanding the pipeline.**
 
 
 ## Installation
