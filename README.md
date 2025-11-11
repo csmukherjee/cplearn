@@ -16,7 +16,7 @@ The package includes:
 ---
 
 ## **Explore the  [Interactive vignette](https://csmukherjee.github.io/cplearn/tester.html) — highly recommended for understanding the pipeline.**
-
+## Read the [overview](https://csmukherjee.github.io/home//assets/lcpdm.html) to get a more in-depth exposition.
 
 ## Installation
 
